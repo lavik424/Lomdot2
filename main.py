@@ -1,21 +1,19 @@
 import numpy as np
 import pandas as pd
-
+from sklearn.model_selection import train_test_split
 
 
 # read data into data frame
 
 df = pd.read_csv("./ElectionsData.csv")
 
-#df.info()
+X = df.drop('Vote',axis=1).values
+Y = pd.DataFrame(df['Vote'])
 
-colToInt = ["Num_of_kids_born_last_10_years","Number_of_valued_Kneset_members",\
-            "Number_of_differnt_parties_voted_for","Last_school_grades","Yearly_ExpensesK",\
-            "Occupation_Satisfaction"]
+np.random.seed(0)
+X_train, X_testVer, y_train, y_testVer = train_test_split(X,Y)
 
-# print(df.head(3)[colToInt])
+X_ver, X_test, y_ver, y_test = train_test_split(X_testVer,y_testVer,train_size=0.6,test_size=0.4)
 
-df.fillna('None')
 
-df.astype('int32')[colToInt]
 
