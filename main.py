@@ -42,16 +42,17 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
 
 
 df = pd.read_csv("./ElectionsData.csv")
-X = df.drop('Vote', axis=1).values
+X = df.drop('Vote', axis=1)
 Y = pd.DataFrame(df['Vote'])
 
+print(Y)
 np.random.seed(0)
 x_train, x_testVer, y_train, y_testVer = train_test_split(X, Y)
+
 
 x_ver, x_test, y_ver, y_test = train_test_split(x_testVer, y_testVer, train_size=0.6, test_size=0.4)
 
 
+
 x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
     setTypesToCols(x_train.copy(), y_train.copy(), x_ver.copy(), y_ver.copy(), x_test.copy(), y_test.copy())
-
-print(x_test_cat)
