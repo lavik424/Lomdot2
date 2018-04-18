@@ -126,7 +126,7 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
 
 
 
-=======
+
 def main():
     df = pd.read_csv("./ElectionsData.csv")
     X = df.drop('Vote', axis=1)
