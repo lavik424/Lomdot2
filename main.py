@@ -1,6 +1,10 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from util import describeAndPlot
+
+
+
 
 def add_missing_dummy_columns( d, columns ,original_col_name ):
     missing_cols = set( columns ) - set( d.columns ) - set(original_col_name)
@@ -121,22 +125,37 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
     return trainX, trainY, validX, validY, testX, testY
 
 
-df = pd.read_csv("./ElectionsData.csv")
-X = df.drop('Vote', axis=1)
-Y = pd.DataFrame(df['Vote'])
 
-np.random.seed(0)
-x_train, x_testVer, y_train, y_testVer = train_test_split(X, Y)
-
-
-x_ver, x_test, y_ver, y_test = train_test_split(x_testVer, y_testVer, train_size=0.6, test_size=0.4)
+=======
+def main():
+    df = pd.read_csv("./ElectionsData.csv")
+    X = df.drop('Vote', axis=1)
+    Y = pd.DataFrame(df['Vote'])
 
 
+    np.random.seed(0)
+    x_train, x_testVer, y_train, y_testVer = train_test_split(X, Y)
 
-x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
-    setTypesToCols(x_train.copy(), y_train.copy(), x_ver.copy(), y_ver.copy(), x_test.copy(), y_test.copy())
 
-# print (x_train_cat)
-# print(x_train_cat.info())
-print(pd.get_dummies(x_train_cat).columns)
-# print(x_train_cat["MarriedInt"])
+    x_ver, x_test, y_ver, y_test = train_test_split(x_testVer, y_testVer, train_size=0.6, test_size=0.4)
+
+
+
+    x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
+        setTypesToCols(x_train.copy(), y_train.copy(), x_ver.copy(), y_ver.copy(), x_test.copy(), y_test.copy())
+
+
+
+    df_train = x_train.copy()
+    df_train['Vote'] = y_train.copy().values
+    describeAndPlot(df_train)
+
+    # print (x_train_cat)
+    # print(x_train_cat.info())
+    print(pd.get_dummies(x_train_cat).columns)
+    # print(x_train_cat["MarriedInt"])
+
+
+if __name__ == '__main__':
+    main()
+
