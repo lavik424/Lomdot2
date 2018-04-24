@@ -30,7 +30,8 @@ def describeAndPlot(df:pd.DataFrame):
         plt.ylabel('Number of Voters')
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         title += '.png'
-        plt.savefig(title.format(key),bbox_inches="tight")
+        plotName = './plots/' + title.format(key)
+        plt.savefig(plotName,bbox_inches="tight")
         plt.clf()
 
     # for numeric columns
@@ -54,7 +55,8 @@ def describeAndPlot(df:pd.DataFrame):
         plt.ylabel('Name of Party')
         plt.yticks(indexList,partyList)
         title += '.png'
-        plt.savefig(title.format(key), bbox_inches="tight")
+        plotName = './plots/' + title.format(key)
+        plt.savefig(plotName, bbox_inches="tight")
         plt.clf()
 
 
@@ -78,29 +80,33 @@ def pcaTrain(x_data:pd.DataFrame, y_data:pd.DataFrame):
     
     
     
-def fillNAByLabelMode(df:pd.DataFrame,index):
-    if df.index.dtype == 'float':
+def fillNAByLabelMode(X:pd.DataFrame,Y:pd.DataFrame,index):
+    if X.index.dtype == 'float':
         print('ERROR needs to be a discrete category')
+    df = X
+    df['Vote'] = Y.copy().values
     partyList = df['Vote'].unique()
     df[index + 'FillByMode'] = df[index]
     for p in partyList:
         mask = df.Vote == p
         colByLabel = df[mask]
         currMode = colByLabel[index].mode().iloc[0] # just the first mode, could be more than 1
-        # print('party',p,'mode is:',currMode) # TODO remove
+        print('party',p,'mode is:',currMode) # TODO remove
         # df.loc[df[df[mask][index].isnull()],index + 'FillByMode'] = currMode
         # df[mask][index] = df[mask][index].fillna(currMode)
         df.loc[(mask) & (df[index + 'FillByMode'].isnull()),index + 'FillByMode'] = currMode
-    return df
+    return df.drop('Vote', axis=1)
 
 
-def fillNAByLabelMeanMedian(df:pd.DataFrame,index,meanOrMedian):
+def fillNAByLabelMeanMedian(X:pd.DataFrame,Y:pd.DataFrame,index,meanOrMedian):
     if not meanOrMedian in ('Mean','Median'):
         print('ERROR should state mean or median only')
-        return df
-    if df.index.dtype == np.number:
+        return X
+    if X.index.dtype == np.number:
         print('ERROR needs to be a numeric category')
-        return df
+        return X
+    df = X
+    df['Vote'] = Y.copy().values
     partyList = df['Vote'].unique()
     newColName = index + 'FillBy' + meanOrMedian
     df[newColName] = df[index]
@@ -109,6 +115,9 @@ def fillNAByLabelMeanMedian(df:pd.DataFrame,index,meanOrMedian):
         colByLabel = df[mask]
         curr = colByLabel[index].mean if meanOrMedian == 'Mean' else colByLabel[index].median
         df.loc[(mask) & (df[newColName].isnull()),newColName] = curr
-    return df
+    return df.drop('Vote', axis=1)
 
 
+
+
+df['IncomeMinusExpenses'] = df.Yearly_IncomeK - df.Yearly_ExpensesK
