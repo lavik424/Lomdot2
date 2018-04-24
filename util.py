@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.stats import norm
 
 
 
@@ -60,26 +61,63 @@ def describeAndPlot(df:pd.DataFrame):
         plt.clf()
 
 
-def pcaTrain(x_data:pd.DataFrame, y_data:pd.DataFrame):
-    from sklearn.decomposition import PCA
-    from sklearn.preprocessing import StandardScaler
 
-    #normalize the data
-    x_data_norm = StandardScaler().fit_transform(x_data)
-    print(x_data_norm.head(10))
-    #initiate PCA
-    pca = PCA(n_components=2) #for visualizaion 
-    pca_res = pca.fit_transform(x_data_norm)
+### Creates HIST plots for numerical categories ###
+def histForFloat(df:pd.DataFrame):
+    numFeat = df.keys()[df.dtypes.map(lambda x: x == np.number)]
+    numFeat = numFeat.difference(colToInt)
+    partyMap = {p:i for i,p in enumerate(df['Vote'].unique())}
 
-    pca_df = pd.DataFrame(data=pca_res,columns=['principal component 1', 'principal component 2'])
-    print(pca_df.head(10))
-    final_df = pd.concat([pca_df,y_data],axis=1)
-    labels = y_data.Vote.unique()
-    # plt.scatter()
+
+    for key in numFeat:
+        partyList = df['Vote'].unique()
+        plt.figure(figsize=(40,30))
+        mainTitle = "Hist plots of {}"
+        plt.suptitle(mainTitle.format(key))
+        for i,p in enumerate(partyList):
+            rows = df[key].notnull()
+            mask = df.Vote == p
+            x = df.loc[mask & rows,key]
+            plt.subplot(3,4,i+1)
+            n,bins,patches = plt.hist(x=x,bins=20)
+            plt.title(p)
+            plt.ylabel('Number of Voters')
+            plt.xlim(np.floor(np.min(x)), np.ceil(np.max(x)))
+            plt.ylim(0,1+np.max(n).astype(int))
+            mu = x.mean()
+            sigma = np.std(x.values)
+            # print('mean is:',mu,'std is:',sigma)
+            normDis = np.linspace(np.floor(np.min(x)), np.ceil(np.max(x)), bins.shape[0])
+            y = norm.pdf(normDis, mu, sigma)
+            plt.plot(bins, y, 'r--')
+            # plt.plot(bins)
+
+        mainTitle += '.png'
+        plotName = './plots/' + mainTitle.format(key)
+        plt.savefig(plotName, bbox_inches="tight")
+        plt.close()
+
+
+# def pcaTrain(x_data:pd.DataFrame, y_data:pd.DataFrame):
+#     from sklearn.decomposition import PCA
+#     from sklearn.preprocessing import StandardScaler
+#
+#     #normalize the data
+#     x_data_norm = StandardScaler().fit_transform(x_data)
+#     print(x_data_norm.head(10))
+#     #initiate PCA
+#     pca = PCA(n_components=2) #for visualizaion
+#     pca_res = pca.fit_transform(x_data_norm)
+#
+#     pca_df = pd.DataFrame(data=pca_res,columns=['principal component 1', 'principal component 2'])
+#     print(pca_df.head(10))
+#     final_df = pd.concat([pca_df,y_data],axis=1)
+#     labels = y_data.Vote.unique()
+#     # plt.scatter()
     
     
     
-    
+### Function that fill nan cells in object categories with mode value ###
 def fillNAByLabelMode(X:pd.DataFrame,Y:pd.DataFrame,index):
     if X.index.dtype == 'float':
         print('ERROR needs to be a discrete category')
@@ -98,6 +136,8 @@ def fillNAByLabelMode(X:pd.DataFrame,Y:pd.DataFrame,index):
     return df.drop('Vote', axis=1)
 
 
+
+### Function that fill nan cells in numeric categories with mean or median value ###
 def fillNAByLabelMeanMedian(X:pd.DataFrame,Y:pd.DataFrame,index,meanOrMedian):
     if not meanOrMedian in ('Mean','Median'):
         print('ERROR should state mean or median only')
@@ -120,4 +160,4 @@ def fillNAByLabelMeanMedian(X:pd.DataFrame,Y:pd.DataFrame,index,meanOrMedian):
 
 
 
-df['IncomeMinusExpenses'] = df.Yearly_IncomeK - df.Yearly_ExpensesK
+# df['IncomeMinusExpenses'] = df.Yearly_IncomeK - df.Yearly_ExpensesK
