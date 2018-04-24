@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from util import describeAndPlot
 from util import pcaTrain
 from util import *
+import stats
 
 
 
@@ -57,7 +58,7 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
     # categorize train set
     trainX[f] = trainX[f].astype("category")
     trainX[f + "Int"] = trainX[f].cat.rename_categories(
-        {'Below_30': 0, '30-45': 1, '45_and_up': 2})
+        {'Below_30': 0, '30-45': 1, '45_and_up': 2}).astype(float)
     trainX.loc[trainX[f].isnull(), f + "Int"] = np.nan  # fix NaN conversion
 
     # Let's creat a crosstabcross-tabulation to look at this transformation
@@ -71,7 +72,7 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
         print("\n\nTrain and Valid don't share the same set of categories in feature '", f, "'")
     # legitIndex = trainX[f].notnull()
     validX[f + "Int"] = validX[f].cat.rename_categories(
-        {'Below_30': 0, '30-45': 1, '45_and_up': 2})
+        {'Below_30': 0, '30-45': 1, '45_and_up': 2}).astype(float)
     validX.loc[validX[f].isnull(), f + "Int"] = np.nan  # fix NaN conversion
 
     # categorize test set
@@ -81,7 +82,7 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
     else:
         print("\n\nTrain and Test don't share the same set of categories in feature '", f, "'")
     testX[f + "Int"] = testX[f].cat.rename_categories(
-        {'Below_30': 0, '30-45': '1', '45_and_up': '2'})
+        {'Below_30': 0, '30-45': 1, '45_and_up': 2}).astype(float)
     testX.loc[testX[f].isnull(), f + "Int"] = np.nan  # fix NaN conversion
 
     ### translate binary categorial
@@ -122,12 +123,15 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
     testX = pd.concat([fix_multivar_columns_for_test(testX,trainX,colOfMultiCategorial),
                        testX[colOfMultiCategorial]], axis=1)
 
-    trainX = pd.concat([fix_multivar_columns_for_test(trainX,trainX,colOfMultiCategorial),
+    validX = pd.concat([fix_multivar_columns_for_test(validX,trainX,colOfMultiCategorial),
                         trainX[colOfMultiCategorial]], axis=1)
 
     return trainX, trainY, validX, validY, testX, testY
 
-
+def displayPlots(x_train, y_train):
+    df_train = x_train.copy()
+    df_train['Vote'] = y_train.copy().values
+    describeAndPlot(df_train)
 
 
 def main():
@@ -141,7 +145,7 @@ def main():
     X = df.drop('Vote', axis=1)
     Y = pd.DataFrame(df['Vote'])
 
-
+    # Split to train, valid, test
     np.random.seed(0)
     x_train, x_testVer, y_train, y_testVer = train_test_split(X, Y)
     x_val, x_test, y_val, y_test = train_test_split(x_testVer, y_testVer, train_size=0.6, test_size=0.4)
@@ -149,23 +153,31 @@ def main():
     x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
         setTypesToCols(x_train.copy(), y_train.copy(), x_val.copy(), y_val.copy(), x_test.copy(), y_test.copy())
 
+    # display plots
+    # displayPlots(x_train, y_train)
 
 
-    df_train = x_train.copy()
-    df_train['Vote'] = y_train.copy().values
-    describeAndPlot(df_train)
-
-    print (x_train_cat)
-    print(x_train_cat.info())
-    print(pd.get_dummies(x_train_cat).columns)
-    print(x_train_cat["MarriedInt"])
+    # print (x_train_cat)
+    # print(x_train_cat.info())
+    # print(pd.get_dummies(x_train_cat).columns)
+    # print(x_train_cat["MarriedInt"])
     
 
     # drop object dtype
 
     x_train_cat_number_only = x_train_cat.select_dtypes(include=np.number)
     print(x_train_cat_number_only.info())
-    
+
+    x_train_cat_number_only['Vote'] = y_train_cat
+    x_train_cat_number_only = x_train_cat_number_only.dropna(axis=0, how='any')
+
+    stats.plotPCA(x_train_cat_number_only.drop(columns=['Vote']), x_train_cat_number_only['Vote'])
+
+    for c in x_train_cat_number_only.columns:
+        print(c, "vs label", stats.mutualInformation(x_train_cat_number_only['Vote'],
+                                                     x_train_cat_number_only[c]))
+
+
 if __name__ == '__main__':
     main()
 
