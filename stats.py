@@ -18,8 +18,8 @@ def pearsonCorrelation(col1:pd.Series, col2:pd.Series):
     :param col2:
     :return:
     """
-    col1array:np.ndarray = col1.values()
-    col2array:np.ndarray = col2.values()
+    col1array = col1.values()
+    col2array = col2.values()
 
     return sp.stats.pearsonr(col1array, col2array)
 
@@ -31,8 +31,8 @@ def mutualInformation(label:pd.Series, x:pd.Series):
     :return:
     """
 
-    col1array:np.ndarray = label.values
-    col2array:np.ndarray = x.values
+    col1array = label.values
+    col2array = x.values
 
     return metrics.mutual_info_score(label,x)
 
@@ -84,3 +84,22 @@ def plotPCA(X:pd.DataFrame, Y:pd.Series, title="PCA of features"):
     #     plt.ylabel('Second principal component')
     #     plt.legend(loc="upper left")
     plt.show()
+
+
+### Normalize one column (index) in a df.
+### index = col name , method = MinMax for minMaxScaler or Standard for StandardScaler
+def scaleSingleColumn(df: pd.DataFrame, index, method='MinMax'):
+    if method not in ('MinMax', 'Standard'):
+        print('ERROR should state MinMax or Standard only')
+        return df
+    if index not in df.columns:
+        print('ERROR index have to be valid column name in df')
+        return df
+    if method == 'MinMax':
+        scaler = MinMaxScaler() if method == 'MinMax' else StandardScaler()
+    print('Before scaler:\n',df.index.describe())
+    print(df.index.head(5))
+    df.loc[:,df.index] = scaler.fit_transform(df.index)
+    print('After scaler:\n',df.index.describe())
+    print(df.index.head(5))
+    return df

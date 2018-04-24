@@ -75,18 +75,21 @@ def histForFloat(df:pd.DataFrame):
         plt.figure(figsize=(40,30))
         mainTitle = "Hist plots of {}"
         plt.suptitle(mainTitle.format(key))
+        rows = df[key].notnull()
+        maxXValue = np.ceil(np.max(df[key]))    ## to assure all subplots will have same x scale
+        minXValue = np.floor(np.min(df[key]))   ## same as above
         for i,p in enumerate(partyList):
-            rows = df[key].notnull()
             mask = df.Vote == p
             x = df.loc[mask & rows,key]
             plt.subplot(3,4,i+1)
             n,bins,patches = plt.hist(x=x,bins=20)
             plt.title(p)
             plt.ylabel('Number of Voters')
-            plt.xlim(np.floor(np.min(x)), np.ceil(np.max(x)))
+            plt.xlim(minXValue, maxXValue)
             plt.ylim(0,1+np.max(n).astype(int))
-            mu = x.mean()
-            sigma = np.std(x.values)
+            ## Trying to add line for normal distribution
+            # mu = x.mean()
+            # sigma = np.std(x.values)
             # print('mean is:',mu,'std is:',sigma)
             # normDis = np.linspace(np.floor(np.min(x)), np.ceil(np.max(x)), bins.shape[0])
             # y = norm.pdf(bins, mu, sigma)
@@ -160,6 +163,4 @@ def fillNAByLabelMeanMedian(X:pd.DataFrame,Y:pd.DataFrame,index,meanOrMedian):
 
 
 
-
-# df['IncomeMinusExpenses'] = df.Yearly_IncomeK - df.Yearly_ExpensesK
 
