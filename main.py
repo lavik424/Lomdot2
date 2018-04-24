@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from util import describeAndPlot
+from util import pcaTrain
+from util import *
 
 
 
@@ -67,8 +69,9 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
         validX[f] = validX[f].cat.rename_categories(validX[f].cat.categories)
     else:
         print("\n\nTrain and Valid don't share the same set of categories in feature '", f, "'")
-    validX[f + "Int"] = validX[f].cat.rename_categories(
-        {'Below_30': 0, '30-45': '1', '45_and_up': '2'})
+    legitIndex = trainX[f].notnull()
+    validX[f + "Int"] = validX[f][legitIndex].cat.rename_categories(
+        {'Below_30': 0, '30-45': 1, '45_and_up': 2})
     validX.loc[validX[f].isnull(), f + "Int"] = np.nan  # fix NaN conversion
 
     # categorize test set
@@ -129,33 +132,44 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
 
 def main():
     df = pd.read_csv("./ElectionsData.csv")
-    X = df.drop('Vote', axis=1)
-    Y = pd.DataFrame(df['Vote'])
+    df.info()
+    print(df.Occupation.unique())
+    df1 = fillNAByLabelMode(df.copy(),'Occupation')
+    df1.info()
+    print(df1.Occupation.unique())
+    # 
+    # X = df.drop('Vote', axis=1)
+    # Y = pd.DataFrame(df['Vote'])
+    # 
+    # 
+    # np.random.seed(0)
+    # x_train, x_testVer, y_train, y_testVer = train_test_split(X, Y)
+    # 
+    # 
+    # x_ver, x_test, y_ver, y_test = train_test_split(x_testVer, y_testVer, train_size=0.6, test_size=0.4)
+    # 
+    # 
+    # 
+    # x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
+    #     setTypesToCols(x_train.copy(), y_train.copy(), x_ver.copy(), y_ver.copy(), x_test.copy(), y_test.copy())
+    # 
 
-
-    np.random.seed(0)
-    x_train, x_testVer, y_train, y_testVer = train_test_split(X, Y)
-
-
-    x_ver, x_test, y_ver, y_test = train_test_split(x_testVer, y_testVer, train_size=0.6, test_size=0.4)
-
-
-
-    x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
-        setTypesToCols(x_train.copy(), y_train.copy(), x_ver.copy(), y_ver.copy(), x_test.copy(), y_test.copy())
-
-
-
-    df_train = x_train.copy()
-    df_train['Vote'] = y_train.copy().values
-    describeAndPlot(df_train)
+    # 
+    # df_train = x_train.copy()
+    # df_train['Vote'] = y_train.copy().values
+    # describeAndPlot(df_train)
 
     # print (x_train_cat)
     # print(x_train_cat.info())
-    print(pd.get_dummies(x_train_cat).columns)
+    # print(pd.get_dummies(x_train_cat).columns)
     # print(x_train_cat["MarriedInt"])
+    
 
-
+    # drop object dtype
+    # 
+    # x_train_cat_number_only = x_train_cat.select_dtypes(include=np.number)
+    # print(x_train_cat_number_only.info())
+    
 if __name__ == '__main__':
     main()
 

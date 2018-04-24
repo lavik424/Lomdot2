@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-
+import matplotlib.pyplot as plt
 
 
 
@@ -14,7 +14,6 @@ colToInt = pd.Index(['Occupation_Satisfaction', 'Last_school_grades',\
 
 ### Print plot from training set on category dtype###
 def describeAndPlot(df:pd.DataFrame):
-    import matplotlib.pyplot as plt
     # df.describe()
 
     #for categorical columns
@@ -44,7 +43,6 @@ def describeAndPlot(df:pd.DataFrame):
     for key in numFeat:
         rows = df[key].notnull()
         x = df.loc[rows,key]
-        # print(key,':    max=',np.max(x),'   min=',np.min(x))
         y = df.loc[rows,'Vote']
         y = y.map(partyMap)
 
@@ -60,5 +58,57 @@ def describeAndPlot(df:pd.DataFrame):
         plt.clf()
 
 
-def pcaTrain(df:pd.DataFrame):
-    pass
+def pcaTrain(x_data:pd.DataFrame, y_data:pd.DataFrame):
+    from sklearn.decomposition import PCA
+    from sklearn.preprocessing import StandardScaler
+
+    #normalize the data
+    x_data_norm = StandardScaler().fit_transform(x_data)
+    print(x_data_norm.head(10))
+    #initiate PCA
+    pca = PCA(n_components=2) #for visualizaion 
+    pca_res = pca.fit_transform(x_data_norm)
+
+    pca_df = pd.DataFrame(data=pca_res,columns=['principal component 1', 'principal component 2'])
+    print(pca_df.head(10))
+    final_df = pd.concat([pca_df,y_data],axis=1)
+    labels = y_data.Vote.unique()
+    # plt.scatter()
+    
+    
+    
+    
+def fillNAByLabelMode(df:pd.DataFrame,index):
+    if df.index.dtype == 'float':
+        print('ERROR needs to be a discrete category')
+    partyList = df['Vote'].unique()
+    df[index + 'FillByMode'] = df[index]
+    for p in partyList:
+        mask = df.Vote == p
+        colByLabel = df[mask]
+        currMode = colByLabel[index].mode().iloc[0] # just the first mode, could be more than 1
+        # print('party',p,'mode is:',currMode) # TODO remove
+        # df.loc[df[df[mask][index].isnull()],index + 'FillByMode'] = currMode
+        # df[mask][index] = df[mask][index].fillna(currMode)
+        df.loc[(mask) & (df[index + 'FillByMode'].isnull()),index + 'FillByMode'] = currMode
+    return df
+
+
+def fillNAByLabelMeanMedian(df:pd.DataFrame,index,meanOrMedian):
+    if not meanOrMedian in ('Mean','Median'):
+        print('ERROR should state mean or median only')
+        return df
+    if df.index.dtype == np.number:
+        print('ERROR needs to be a numeric category')
+        return df
+    partyList = df['Vote'].unique()
+    newColName = index + 'FillBy' + meanOrMedian
+    df[newColName] = df[index]
+    for p in partyList:
+        mask = df.Vote == p
+        colByLabel = df[mask]
+        curr = colByLabel[index].mean if meanOrMedian == 'Mean' else colByLabel[index].median
+        df.loc[(mask) & (df[newColName].isnull()),newColName] = curr
+    return df
+
+
