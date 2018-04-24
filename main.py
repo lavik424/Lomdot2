@@ -44,16 +44,16 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
                    validX: pd.DataFrame, validY: pd.DataFrame,
                    testX: pd.DataFrame, testY: pd.DataFrame):
 
-    colTocategoryOnehot = ["Most_Important_Issue", "Will_vote_only_large_party", "Main_transportation",
+    colOfMultiCategorial = ["Most_Important_Issue", "Will_vote_only_large_party", "Main_transportation",
                            "Occupation"]
 
-    colToCategoryOrdered = ["Age_group"]
+    colOfOrderedCategorial = ["Age_group"]
 
-    colToCategorialBinary = [c for c in trainX.keys()[trainX.dtypes.map(lambda x: x=='object')]
-                       if c not in colTocategoryOnehot and c not in colToCategoryOrdered]
+    colOfBinaryCategorial = [c for c in trainX.keys()[trainX.dtypes.map(lambda x: x=='object')]
+                       if c not in colOfMultiCategorial and c not in colOfOrderedCategorial]
 
     ### translate ordered categorial
-    f = colToCategorialBinary[0]
+    f = colOfOrderedCategorial[0]
     # categorize train set
     trainX[f] = trainX[f].astype("category")
     trainX[f + "Int"] = trainX[f].cat.rename_categories(
@@ -69,8 +69,8 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
         validX[f] = validX[f].cat.rename_categories(validX[f].cat.categories)
     else:
         print("\n\nTrain and Valid don't share the same set of categories in feature '", f, "'")
-    legitIndex = trainX[f].notnull()
-    validX[f + "Int"] = validX[f][legitIndex].cat.rename_categories(
+    # legitIndex = trainX[f].notnull()
+    validX[f + "Int"] = validX[f].cat.rename_categories(
         {'Below_30': 0, '30-45': 1, '45_and_up': 2})
     validX.loc[validX[f].isnull(), f + "Int"] = np.nan  # fix NaN conversion
 
@@ -85,7 +85,7 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
     testX.loc[testX[f].isnull(), f + "Int"] = np.nan  # fix NaN conversion
 
     ### translate binary categorial
-    for f in colToCategorialBinary:
+    for f in colOfBinaryCategorial:
         # categorize train set
         trainX[f] = trainX[f].astype("category")
         trainX[f + "Int"] = trainX[f].cat.rename_categories(range(trainX[f].nunique())).astype(int)
@@ -113,17 +113,17 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
         testX.loc[testX[f].isnull(), f + "Int"] = np.nan  # fix NaN conversion
 
     ### translate multivar categorial
-    for f in colTocategoryOnehot:
+    for f in colOfMultiCategorial:
         # categorize train set
         trainX[f] = trainX[f].astype("category")
-    trainX = pd.concat([pd.get_dummies(trainX, columns=colTocategoryOnehot, dummy_na=True),
-                        trainX[colTocategoryOnehot]], axis=1)
+    trainX = pd.concat([pd.get_dummies(trainX, columns=colOfMultiCategorial, dummy_na=True),
+                        trainX[colOfMultiCategorial]], axis=1)
 
-    testX = pd.concat([fix_multivar_columns_for_test(testX,trainX,colTocategoryOnehot),
-                       testX[colTocategoryOnehot]], axis=1)
+    testX = pd.concat([fix_multivar_columns_for_test(testX,trainX,colOfMultiCategorial),
+                       testX[colOfMultiCategorial]], axis=1)
 
-    trainX = pd.concat([fix_multivar_columns_for_test(trainX,trainX,colTocategoryOnehot),
-                        trainX[colTocategoryOnehot]], axis=1)
+    trainX = pd.concat([fix_multivar_columns_for_test(trainX,trainX,colOfMultiCategorial),
+                        trainX[colOfMultiCategorial]], axis=1)
 
     return trainX, trainY, validX, validY, testX, testY
 
@@ -137,38 +137,34 @@ def main():
     df1 = fillNAByLabelMode(df.copy(),'Occupation')
     df1.info()
     print(df1.Occupation.unique())
-    # 
-    # X = df.drop('Vote', axis=1)
-    # Y = pd.DataFrame(df['Vote'])
-    # 
-    # 
-    # np.random.seed(0)
-    # x_train, x_testVer, y_train, y_testVer = train_test_split(X, Y)
-    # 
-    # 
-    # x_ver, x_test, y_ver, y_test = train_test_split(x_testVer, y_testVer, train_size=0.6, test_size=0.4)
-    # 
-    # 
-    # 
-    # x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
-    #     setTypesToCols(x_train.copy(), y_train.copy(), x_ver.copy(), y_ver.copy(), x_test.copy(), y_test.copy())
-    # 
 
-    # 
-    # df_train = x_train.copy()
-    # df_train['Vote'] = y_train.copy().values
-    # describeAndPlot(df_train)
+    X = df.drop('Vote', axis=1)
+    Y = pd.DataFrame(df['Vote'])
 
-    # print (x_train_cat)
-    # print(x_train_cat.info())
-    # print(pd.get_dummies(x_train_cat).columns)
-    # print(x_train_cat["MarriedInt"])
+
+    np.random.seed(0)
+    x_train, x_testVer, y_train, y_testVer = train_test_split(X, Y)
+    x_val, x_test, y_val, y_test = train_test_split(x_testVer, y_testVer, train_size=0.6, test_size=0.4)
+
+    x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
+        setTypesToCols(x_train.copy(), y_train.copy(), x_val.copy(), y_val.copy(), x_test.copy(), y_test.copy())
+
+
+
+    df_train = x_train.copy()
+    df_train['Vote'] = y_train.copy().values
+    describeAndPlot(df_train)
+
+    print (x_train_cat)
+    print(x_train_cat.info())
+    print(pd.get_dummies(x_train_cat).columns)
+    print(x_train_cat["MarriedInt"])
     
 
     # drop object dtype
-    # 
-    # x_train_cat_number_only = x_train_cat.select_dtypes(include=np.number)
-    # print(x_train_cat_number_only.info())
+
+    x_train_cat_number_only = x_train_cat.select_dtypes(include=np.number)
+    print(x_train_cat_number_only.info())
     
 if __name__ == '__main__':
     main()
