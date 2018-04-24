@@ -63,6 +63,7 @@ def describeAndPlot(df:pd.DataFrame):
 
 
 ### Creates HIST plots for numerical categories ###
+## TODO set scale or normalize
 def histForFloat(df:pd.DataFrame):
     numFeat = df.keys()[df.dtypes.map(lambda x: x == np.number)]
     numFeat = numFeat.difference(colToInt)
@@ -87,10 +88,10 @@ def histForFloat(df:pd.DataFrame):
             mu = x.mean()
             sigma = np.std(x.values)
             # print('mean is:',mu,'std is:',sigma)
-            normDis = np.linspace(np.floor(np.min(x)), np.ceil(np.max(x)), bins.shape[0])
-            y = norm.pdf(normDis, mu, sigma)
-            plt.plot(bins, y, 'r--')
-            # plt.plot(bins)
+            # normDis = np.linspace(np.floor(np.min(x)), np.ceil(np.max(x)), bins.shape[0])
+            # y = norm.pdf(bins, mu, sigma)
+            # plt.plot(bins, y, 'r--')
+            plt.plot(bins)
 
         mainTitle += '.png'
         plotName = './plots/' + mainTitle.format(key)
@@ -161,3 +162,4 @@ def fillNAByLabelMeanMedian(X:pd.DataFrame,Y:pd.DataFrame,index,meanOrMedian):
 
 
 # df['IncomeMinusExpenses'] = df.Yearly_IncomeK - df.Yearly_ExpensesK
+
