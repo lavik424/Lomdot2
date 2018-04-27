@@ -88,18 +88,56 @@ def plotPCA(X:pd.DataFrame, Y:pd.Series, title="PCA of features"):
 
 ### Normalize one column (index) in a df.
 ### index = col name , method = MinMax for minMaxScaler or Standard for StandardScaler
-def scaleSingleColumn(df: pd.DataFrame, index, method='MinMax'):
-    if method not in ('MinMax', 'Standard'):
-        print('ERROR should state MinMax or Standard only')
-        return df
+# def scaleSingleColumn(df: pd.DataFrame, index, method='MinMax'):
+#     if method not in ('MinMax', 'Standard'):
+#         print('ERROR should state MinMax or Standard only')
+#         return df
+#     if index not in df.columns:
+#         print('ERROR index have to be valid column name in df')
+#         return df
+#     if method == 'MinMax':
+#         scaler = MinMaxScaler() if method == 'MinMax' else StandardScaler()
+#
+#     print('Before scaler:\n')#,df.index.describe())
+#     print(df[index].head(5))
+#     df.loc[:,df[index]] = scaler.fit_transform(df.index)
+#     print('After scaler:\n')#,df.index.describe())
+#     print(df[index].head(5))
+#     return df
+
+
+
+### Normalize by MinMax one column (index) in a df.
+### index = col name
+### Return: updated df
+def scaleMinMaxSingleColumn(df: pd.DataFrame, index):
     if index not in df.columns:
         print('ERROR index have to be valid column name in df')
         return df
-    if method == 'MinMax':
-        scaler = MinMaxScaler() if method == 'MinMax' else StandardScaler()
-    print('Before scaler:\n',df.index.describe())
-    print(df.index.head(5))
-    df.loc[:,df.index] = scaler.fit_transform(df.index)
-    print('After scaler:\n',df.index.describe())
-    print(df.index.head(5))
+    # print('Before scaler:\n')  # ,df.index.describe())
+    # print(df[index].head(5))
+    max_value = np.max(df[index])
+    min_value = np.min(df[index])
+    df[index] = (df[index] - min_value) / (max_value - min_value)
+    # print('After scaler:\n')  # ,df.index.describe())
+    # print(df[index].head(5))
+    return df
+
+
+
+
+### Normalize by Normal Standard Distribution (T test??) one column (index) in a df.
+### index = col name
+### Return: updated df
+def scaleNormalSingleColumn(df: pd.DataFrame, index):
+    if index not in df.columns:
+        print('ERROR index have to be valid column name in df')
+        return df
+    # print('Before scaler:\n')  # ,df.index.describe())
+    # print(df[index].head(5))
+    mean_value = np.mean(df[index])
+    std_value = np.std(df[index])
+    df[index] = (df[index] - mean_value) / (std_value)
+    # print('After scaler:\n')  # ,df.index.describe())
+    # print(df[index].head(5))
     return df
