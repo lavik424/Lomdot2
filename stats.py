@@ -86,6 +86,8 @@ def plotPCA(X:pd.DataFrame, Y:pd.Series, title="PCA of features"):
     plt.show()
 
 
+
+# Not working 
 ### Normalize one column (index) in a df.
 ### index = col name , method = MinMax for minMaxScaler or Standard for StandardScaler
 # def scaleSingleColumn(df: pd.DataFrame, index, method='MinMax'):
