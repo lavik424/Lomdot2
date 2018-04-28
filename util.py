@@ -164,3 +164,64 @@ def fillNAByLabelMeanMedian(X:pd.DataFrame,Y:pd.DataFrame,index,meanOrMedian):
 
 
 
+
+"""
+Function that compute the distane between 2 samples from DataFrame. Should get normalized data
+Let x1,x2,...,xN values of N numeric features of sam1
+and y1,y2,...,yN values of N numeric features of sam2
+Return: sqrt((x1-y1)^2+(x2-y2)^2+...+(xN-yN)^2)
+"""
+def distanceBetween2Samples(sam1,sam2):
+    sam1 = sam1.select_dtypes(include=[np.number]).values
+    sam2 = sam2.select_dtypes(include=[np.number]).values
+    res = np.sqrt(np.sum((sam1-sam2)**2))
+    return res
+
+
+
+"""
+Finds closet sample to sam in the same/different label. Uses distanceBetween2Samples(), should get normalized data
+params: X- copy of DataFrame w/o labels, Y- labels , samIndex- index of the sample in X with iloc (df row's index)
+        hitMiss- 'h' for hit(same label), 'm' for miss (closest in other label
+Return: index of closest sample in the same label
+"""
+def findNearestHitMiss(X:pd.DataFrame,Y:pd.DataFrame,samIndex,hitMiss='h'):
+    if hitMiss != 'h' and hitMiss != 'm':
+        print('ERROR must state \'h\' for hit or \'m\' for miss')
+        return -1
+    # merge X+Y
+    df = X
+    df['Vote'] = Y.values
+
+    sampleToCompare = df.iloc[[samIndex]] 
+    realSamIndex = df.iloc[[samIndex]].index[0] # beacuse its easier to iterate over iloc but loc gives exact location
+    # print('samIndex=',samIndex,'but real index is:',realSamIndex)
+
+    label = sampleToCompare['Vote'] # gets sam's label
+    # print(label)
+    label = label.get_values()[0]
+    # print('The label is:',label)
+    if hitMiss == 'h':
+        mask = df.Vote == label
+    else:
+        mask = df.Vote != label
+    rowsByLabel = df[mask]
+    minIndex = -1
+    minScore = np.inf
+    
+    for i in range(rowsByLabel.shape[0]): # iterate over rows
+        currIndex = rowsByLabel.iloc[[i]].index[0] # gets the index of the row in the original df
+        # print(currIndex)
+        if realSamIndex == currIndex: 
+            continue
+        curr = distanceBetween2Samples(sampleToCompare, rowsByLabel.iloc[[i]])
+        # print(curr)
+        if curr < minScore:
+            minScore = curr
+            minIndex = currIndex
+    return minIndex
+
+
+    # return np.min(np.vectorize(\
+    #     lambda row:distanceBetween2Samples(df.iloc[[samIndex]],row)(rowsByLabel)))
+    #         # if row.index != samIndex else np.inf)(rowsByLabel)))
