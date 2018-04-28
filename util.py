@@ -181,9 +181,9 @@ def distanceBetween2Samples(sam1,sam2):
 
 """
 Finds closet sample to sam in the same/different label. Uses distanceBetween2Samples(), should get normalized data
-params: X- copy of DataFrame w/o labels, Y- labels , samIndex- index of the sample in X with iloc (df row's index)
-        hitMiss- 'h' for hit(same label), 'm' for miss (closest in other label
-Return: index of closest sample in the same label
+params: X- copy of DataFrame w/o labels, Y- labels , samIndex- index of the sample in X with iloc (X relative row's index)
+        hitMiss- 'h' for hit(same label), 'm' for miss (closest in other label)
+Return: index of closest sample in the same\other label, original index use with loc
 """
 def findNearestHitMiss(X:pd.DataFrame,Y:pd.DataFrame,samIndex,hitMiss='h'):
     if hitMiss != 'h' and hitMiss != 'm':

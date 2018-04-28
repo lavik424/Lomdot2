@@ -128,7 +128,7 @@ def scaleMinMaxSingleColumn(df: pd.DataFrame, index):
 
 
 
-### Normalize by Normal Standard Distribution (T test??) one column (index) in a df.
+### Normalize by Normal Standard Distribution (Z/T test??) one column (index) in a df.
 ### index = col name
 ### Return: updated df
 def scaleNormalSingleColumn(df: pd.DataFrame, index):

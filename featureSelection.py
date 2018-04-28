@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
+from util import findNearestHitMiss
 
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 
+from random import randint
 
 def sfs(x:pd.DataFrame, y:pd.DataFrame, k, clf, score):
     """
@@ -63,3 +65,22 @@ def scoreForClassfier(clf, examples, classification):
 
     totalAccuracy = totalAccuracy / numOfSplits
     return totalAccuracy
+
+
+
+def reliefFeatureSelection(X:pd.DataFrame,Y:pd.DataFrame,numOfFeaturesToSelect=20,numOfRowsToSample=20):
+    totalNumOfFeatures = X.select_dtypes(include=[np.number]).shape[1]
+    numOfRows = X.shape[0]
+    resW = np.zeros(totalNumOfFeatures,dtype=float)
+    for i in range(numOfRowsToSample):
+        currIndex = randint(0, numOfRows)
+        nearestHit = findNearestHitMiss(X, Y, currIndex, 'h')
+        nearestMiss = findNearestHitMiss(X, Y, currIndex, 'm')
+        nearestHit_values = X.loc[[nearestHit]].select_dtypes(include=[np.number]).values
+        nearestMiss_values = X.loc[[nearestMiss]].select_dtypes(include=[np.number]).values
+        curr_values = X.iloc[[currIndex]].select_dtypes(include=[np.number]).values
+        resW += (curr_values - nearestHit_values)**2 - (curr_values - nearestMiss_values)**2
+
+    resWMap = {zip(X.select_dtypes(include=[np.number]).columns,resW)}
+    print(resWMap)
+    return sorted(resWMap[:numOfFeaturesToSelect])

@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from util import *
 import stats
+from featureSelection import *
 
 
 
@@ -161,12 +162,17 @@ def main():
     # print(x_train_cat["MarriedInt"])
 
 
-
-    nearesthit = findNearestHitMiss(x_train,y_train,1,'h')
-    print(x_train.iloc[[1]])
-    print('nearestHit:\n',x_train.loc[[nearesthit]])
-    nearestmiss = findNearestHitMiss(x_train, y_train, 1, 'm')
-    print('nearestMiss:\n', x_train.loc[[nearestmiss]])
+    ## TEST NEARESTHITMISS
+    # nearesthit = findNearestHitMiss(x_train,y_train,1,'h')
+    # print(x_train.iloc[[1]])
+    # print('nearestHit:\n',x_train.loc[[nearesthit]])
+    # nearestmiss = findNearestHitMiss(x_train, y_train, 1, 'm')
+    # print('nearestMiss:\n', x_train.loc[[nearestmiss]])
+    
+    
+    ## TEST RELIEF ALGORITM
+    reliefFeatureSelection(x_train,y_train)
+    
     # drop object dtype
 
     # x_train_cat_number_only = x_train_cat.select_dtypes(include=np.number)
