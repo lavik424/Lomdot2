@@ -1,6 +1,8 @@
-import numpy as np
-import pandas as pd
+
 from sklearn.model_selection import train_test_split
+
+from sklearn.preprocessing import MinMaxScaler
+
 from util import *
 import stats
 from featureSelection import *
@@ -40,8 +42,9 @@ def fix_multivar_columns_for_test(data_test, data_train, original_col_name):
     # d = d[ columns ]
     return data_test
 
+
 def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
-                   validX: pd.DataFrame, validY: pd.DataFrame,
+                   validX:pd.DataFrame, validY: pd.DataFrame,
                    testX: pd.DataFrame, testY: pd.DataFrame):
 
     colOfMultiCategorial = ["Most_Important_Issue", "Will_vote_only_large_party", "Main_transportation",
@@ -127,6 +130,34 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
 
     return trainX, trainY, validX, validY, testX, testY
 
+def creatColVsColCorrelationMatrix(x_train_cat_number_only):
+    colvscolresults = []
+    colList = x_train_cat_number_only.columns
+    for i in range(len(colList)):
+        for j in range(i+1,len(colList)):
+            c1 = colList[i]
+            c2 = colList[j]
+            if c1 != 'Vote' and c2 != 'Vote':
+                c1_scaled = MinMaxScaler().fit_transform(x_train_cat_number_only[c1].reshape(-1, 1))
+                c2_scaled = MinMaxScaler().fit_transform(x_train_cat_number_only[c2].reshape(-1, 1))
+                mi = stats.mutualInformation(c1_scaled, c2_scaled)
+                pearson = stats.pearsonCorrelation(c1_scaled, c2_scaled)
+
+                colvscolresults.append((c1 + " VS " + c2, mi, pearson))
+
+    return colvscolresults
+
+
+def drawColVsColScatterPlot(x_train_cat_number_only, Y):
+    colList = x_train_cat_number_only.columns
+    for i in range(len(colList)):
+        for j in range(i+1,len(colList)):
+            c1 = colList[i]
+            c2 = colList[j]
+            if c1 != 'Vote' and c2 != 'Vote':
+                stats.plotColvsCol(x_train_cat_number_only[c1].reshape(-1, 1),
+                             x_train_cat_number_only[c2].reshape(-1, 1), Y,c1 + " VS " + c2, "none")
+
 def displayPlots(x_train, y_train):
     df_train = x_train.copy()
     df_train['Vote'] = y_train.copy().values
@@ -135,11 +166,14 @@ def displayPlots(x_train, y_train):
 
 def main():
     df = pd.read_csv("./ElectionsData.csv")
+
     # df.info()
     # print(df.Occupation.unique())
     # df1 = fillNAByLabelMode(df.copy(),'Occupation')
     # df1.info()
     # print(df1.Occupation.unique())
+
+    df['IncomeMinusExpenses'] = df.Yearly_IncomeK - df.Yearly_ExpensesK
 
     X = df.drop('Vote', axis=1)
     Y = pd.DataFrame(df['Vote'])
@@ -152,14 +186,14 @@ def main():
     # x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
     #     setTypesToCols(x_train.copy(), y_train.copy(), x_val.copy(), y_val.copy(), x_test.copy(), y_test.copy())
 
+    colToColRel = [["Avg_size_per_room", "Political_interest_Total_Score", "Yearly_IncomeK", "Avg_monthly_household_cost"],
+                    ["AVG_lottary_expanses", "Avg_monthly_income_all_years", "Avg_monthly_expense_when_under_age_21", "Avg_Satisfaction_with_previous_vote", "Will_vote_only_large_party_Yes", "Will_vote_only_large_party_No", "Looking_at_poles_resultsInt"],
+                    ["Last_school_grades", "Will_vote_only_large_party_Maybe", "Most_Important_Issue_Education", "Most_Important_Issue_Military"],
+                    ["Avg_monthly_expense_on_pets_or_plants", "MarriedInt", "Garden_sqr_meter_per_person_in_residancy_area", "Phone_minutes_10_years"]]
+
     # display plots
     # displayPlots(x_train, y_train)
 
-
-    # print (x_train_cat)
-    # print(x_train_cat.info())
-    # print(pd.get_dummies(x_train_cat).columns)
-    # print(x_train_cat["MarriedInt"])
 
 
     ## TEST NEARESTHITMISS
@@ -185,19 +219,26 @@ def main():
 
     # TEST EMBBDED FEATURE SELECTION BY DECISION TREE
     embbdedDecisionTree(x_train,y_train) # not working needs data w/o nan
-    # drop object dtype
+
 
     # x_train_cat_number_only = x_train_cat.select_dtypes(include=np.number)
-    # print(x_train_cat_number_only.info())
     # 
     # x_train_cat_number_only['Vote'] = y_train_cat
     # x_train_cat_number_only = x_train_cat_number_only.dropna(axis=0, how='any')
     # 
     # stats.plotPCA(x_train_cat_number_only.drop(columns=['Vote']), x_train_cat_number_only['Vote'])
-    # 
+    #
+
+    # calculate MI between each feature and label
     # for c in x_train_cat_number_only.columns:
-    #     print(c, "vs label", stats.mutualInformation(x_train_cat_number_only['Vote'],
-    #                                                  x_train_cat_number_only[c]))
+    #     if c != 'Vote':
+    #         print(c, "vs label", stats.mutualInformation(x_train_cat_number_only['Vote'],
+    #                                                      MinMaxScaler().fit_transform(x_train_cat_number_only[c].reshape(-1,1))))
+
+    # create correlation matrices and graphs between each pair in feature list
+    # res = creatColVsColCorrelationMatrix(x_train_cat_number_only)
+    # drawColVsColScatterPlot(x_train_cat_number_only,x_train_cat_number_only['Vote'])
+
 
 
 if __name__ == '__main__':
