@@ -171,8 +171,20 @@ def main():
     
     
     ## TEST RELIEF ALGORITM
-    print(reliefFeatureSelection(x_train,y_train))
-    
+    # print(reliefFeatureSelection(x_train,y_train))
+
+
+    # Replace nan with mean
+    colToInt = x_train.select_dtypes(include=[np.number]).columns
+    for col in colToInt:
+        x_train = fillNAByLabelMeanMedian(x_train.copy(),y_train,col,'Mean')
+
+    # LEAVE only numeric columns w/o nan
+    x_train = x_train.select_dtypes(include=[np.number])
+    x_train = x_train.dropna(axis=1, how='any')
+
+    # TEST EMBBDED FEATURE SELECTION BY DECISION TREE
+    embbdedDecisionTree(x_train,y_train) # not working needs data w/o nan
     # drop object dtype
 
     # x_train_cat_number_only = x_train_cat.select_dtypes(include=np.number)

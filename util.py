@@ -157,7 +157,7 @@ def fillNAByLabelMeanMedian(X:pd.DataFrame,Y:pd.DataFrame,index,meanOrMedian):
     for p in partyList:
         mask = df.Vote == p
         colByLabel = df[mask]
-        curr = colByLabel[index].mean if meanOrMedian == 'Mean' else colByLabel[index].median
+        curr = np.nanmean(colByLabel[index]) if meanOrMedian == 'Mean' else np.nanmedian(colByLabel[index])
         df.loc[(mask) & (df[newColName].isnull()),newColName] = curr
     return df.drop('Vote', axis=1)
 
@@ -225,3 +225,4 @@ def findNearestHitMiss(X:pd.DataFrame,Y:pd.DataFrame,samIndex,hitMiss='h'):
     # return np.min(np.vectorize(\
     #     lambda row:distanceBetween2Samples(df.iloc[[samIndex]],row)(rowsByLabel)))
     #         # if row.index != samIndex else np.inf)(rowsByLabel)))
+
