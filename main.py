@@ -171,7 +171,7 @@ def main():
     
     
     ## TEST RELIEF ALGORITM
-    reliefFeatureSelection(x_train,y_train)
+    print(reliefFeatureSelection(x_train,y_train))
     
     # drop object dtype
 

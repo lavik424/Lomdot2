@@ -68,10 +68,11 @@ def scoreForClassfier(clf, examples, classification):
 
 
 
-def reliefFeatureSelection(X:pd.DataFrame,Y:pd.DataFrame,numOfFeaturesToSelect=20,numOfRowsToSample=20):
+def reliefFeatureSelection(X:pd.DataFrame,Y:pd.DataFrame,numOfFeaturesToSelect=20,numOfRowsToSample=5):
     totalNumOfFeatures = X.select_dtypes(include=[np.number]).shape[1]
     numOfRows = X.shape[0]
     resW = np.zeros(totalNumOfFeatures,dtype=float)
+    resW = resW.reshape((1,-1))
     for i in range(numOfRowsToSample):
         currIndex = randint(0, numOfRows)
         nearestHit = findNearestHitMiss(X, Y, currIndex, 'h')
@@ -81,6 +82,7 @@ def reliefFeatureSelection(X:pd.DataFrame,Y:pd.DataFrame,numOfFeaturesToSelect=2
         curr_values = X.iloc[[currIndex]].select_dtypes(include=[np.number]).values
         resW += (curr_values - nearestHit_values)**2 - (curr_values - nearestMiss_values)**2
 
-    resWMap = {zip(X.select_dtypes(include=[np.number]).columns,resW)}
+    print(resW)
+    resWMap = list(zip(X.select_dtypes(include=[np.number]).columns,*resW))
     print(resWMap)
-    return sorted(resWMap[:numOfFeaturesToSelect])
+    return sorted(resWMap[:numOfFeaturesToSelect],key=lambda x:x[1],reverse=True)

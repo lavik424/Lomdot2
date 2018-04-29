@@ -174,7 +174,7 @@ Return: sqrt((x1-y1)^2+(x2-y2)^2+...+(xN-yN)^2)
 def distanceBetween2Samples(sam1,sam2):
     sam1 = sam1.select_dtypes(include=[np.number]).values
     sam2 = sam2.select_dtypes(include=[np.number]).values
-    res = np.sqrt(np.sum((sam1-sam2)**2))
+    res = np.sqrt(np.nansum((sam1-sam2)**2)) ## TODO check which is better np.nansum(treats nan as 0) or np.sum(return nan)
     return res
 
 
