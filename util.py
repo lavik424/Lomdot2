@@ -165,13 +165,13 @@ def fillNAByLabelMeanMedian(X:pd.DataFrame,Y:pd.DataFrame,index,meanOrMedian):
 
 
 
-"""
-Function that compute the distane between 2 samples from DataFrame. Should get normalized data
-Let x1,x2,...,xN values of N numeric features of sam1
-and y1,y2,...,yN values of N numeric features of sam2
-Return: sqrt((x1-y1)^2+(x2-y2)^2+...+(xN-yN)^2)
-"""
 def distanceBetween2Samples(sam1,sam2):
+    """
+    Function that compute the distane between 2 samples from DataFrame. Should get normalized data, w/o nan values
+    Let x1,x2,...,xN values of N numeric features of sam1
+    and y1,y2,...,yN values of N numeric features of sam2
+    Return: sqrt((x1-y1)^2+(x2-y2)^2+...+(xN-yN)^2)
+    """
     sam1 = sam1.select_dtypes(include=[np.number]).values
     sam2 = sam2.select_dtypes(include=[np.number]).values
     res = np.sqrt(np.nansum((sam1-sam2)**2)) ## TODO check which is better np.nansum(treats nan as 0) or np.sum(return nan)
@@ -179,13 +179,13 @@ def distanceBetween2Samples(sam1,sam2):
 
 
 
-"""
-Finds closet sample to sam in the same/different label. Uses distanceBetween2Samples(), should get normalized data
-params: X- copy of DataFrame w/o labels, Y- labels , samIndex- index of the sample in X with iloc (X relative row's index)
-        hitMiss- 'h' for hit(same label), 'm' for miss (closest in other label)
-Return: index of closest sample in the same\other label, original index use with loc
-"""
 def findNearestHitMiss(X:pd.DataFrame,Y:pd.DataFrame,samIndex,hitMiss='h'):
+    """
+    Finds closet sample to sam in the same/different label. Uses distanceBetween2Samples(), should get normalized data
+    params: X- copy of DataFrame w/o labels, Y- labels , samIndex- index of the sample in X with iloc (X relative row's index)
+            hitMiss- 'h' for hit(same label), 'm' for miss (closest in other label)
+    Return: index of closest sample in the same\other label, original index use with loc
+    """
     if hitMiss != 'h' and hitMiss != 'm':
         print('ERROR must state \'h\' for hit or \'m\' for miss')
         return -1

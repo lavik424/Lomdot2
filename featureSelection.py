@@ -1,3 +1,5 @@
+from operator import itemgetter
+
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
@@ -67,8 +69,13 @@ def scoreForClassfier(clf, examples, classification):
     return totalAccuracy
 
 
-
 def reliefFeatureSelection(X:pd.DataFrame,Y:pd.DataFrame,numOfFeaturesToSelect=20,numOfRowsToSample=5):
+    """
+    Relief algorithm, best accept normalized data
+    params: X- copy of DataFrame w/o labels, Y- labels , numOfFeaturesToSelect-int between 1 to num of
+            numOfRowsToSample- int T in pesudo-code, number of times to sample rows from data
+    Return: sorted list of tuples (feature_name,feature_score) at size numOfFeaturesToSelect
+    """
     totalNumOfFeatures = X.select_dtypes(include=[np.number]).shape[1]
     numOfRows = X.shape[0]
     resW = np.zeros(totalNumOfFeatures,dtype=float)
@@ -82,7 +89,7 @@ def reliefFeatureSelection(X:pd.DataFrame,Y:pd.DataFrame,numOfFeaturesToSelect=2
         curr_values = X.iloc[[currIndex]].select_dtypes(include=[np.number]).values
         resW += (curr_values - nearestHit_values)**2 - (curr_values - nearestMiss_values)**2
 
-    print(resW)
+    # print(resW)
     resWMap = list(zip(X.select_dtypes(include=[np.number]).columns,*resW))
-    print(resWMap)
-    return sorted(resWMap[:numOfFeaturesToSelect],key=lambda x:x[1],reverse=True)
+    # print(resWMap)
+    return sorted(resWMap[:numOfFeaturesToSelect],key=itemgetter(1),reverse=True)
