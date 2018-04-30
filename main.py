@@ -203,7 +203,9 @@ def main():
     outlierMap = {'Phone_minutes_10_years':(400,500000),'Avg_size_per_room':(12,None),
                   'Avg_monthly_income_all_years':(None,500000)}
     for col,boundaries in outlierMap:
+        print(np.min(x_train_cat.loc[x_train_cat['Vote'] == 'Yellows'],col))
         x_train_cat = changeOutlierToMean(x_train_cat,y_train_cat,col,'Yellows',boundaries[0],boundaries[1])
+        print(np.min(x_train_cat.loc[x_train_cat['Vote'] == 'Yellows'], col))
     exit(2)
     # List of columns to normalize with scaleNormalSingleColumn. For others use MinMax scale
 
