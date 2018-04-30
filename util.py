@@ -268,3 +268,16 @@ def fillNanWithOtherColumns(X:pd.DataFrame,Y:pd.DataFrame,listOfColsWithConnecti
     return col2edit
 
 
+
+def changeOutlierToMean(X:pd.DataFrame,Y:pd.DataFrame,index,label,lowerBound,upperBound):
+    # merge X+Y
+    df = X
+    df['Vote'] = Y.values
+    mask = df.Vote == label
+    rowsByLabel = df[mask]
+    meanValue = np.nanmean(rowsByLabel[index])
+    if lowerBound != None:
+        df.loc[mask & df[index] < lowerBound] = meanValue
+    if upperBound != None:
+        df.loc[mask & df[index] > upperBound] = meanValue
+    return df.drop('Vote', axis=1)

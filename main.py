@@ -165,7 +165,8 @@ def displayPlots(x_train, y_train):
 
 """
 TODO: WORKFLOW
-1) Convert into One-hot and ObjectInt
+1.1) Convert into One-hot and ObjectInt
+1.2) Detect and remove outliers
 2) Scale to Normal or MinMax
 3) Fill in missing values by close samples
 4) Fill in missing values in Category type columns by mode
@@ -179,6 +180,7 @@ TODO: WORKFLOW
 def main():
     # read data from file
     df = pd.read_csv("./ElectionsData.csv")
+    oldCols = df.columns
 
 
     df['IncomeMinusExpenses'] = df.Yearly_IncomeK - df.Yearly_ExpensesK # new column
@@ -192,26 +194,37 @@ def main():
     x_train, x_testVer, y_train, y_testVer = train_test_split(X, Y)
     x_val, x_test, y_val, y_test = train_test_split(x_testVer, y_testVer, train_size=0.6, test_size=0.4)
 
-
+    print('Entering stage 1')
     # Convert data to ONE-HOT & CATEGORY TODO 1
     x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
         setTypesToCols(x_train.copy(), y_train.copy(), x_val.copy(), y_val.copy(), x_test.copy(), y_test.copy())
 
+    # Detect and remove outliers TODO 1.2
+    outlierMap = {'Phone_minutes_10_years':(400,500000),'Avg_size_per_room':(12,None),
+                  'Avg_monthly_income_all_years':(None,500000)}
+    for col,boundaries in outlierMap:
+        x_train_cat = changeOutlierToMean(x_train_cat,y_train_cat,col,'Yellows',boundaries[0],boundaries[1])
+    exit(2)
     # List of columns to normalize with scaleNormalSingleColumn. For others use MinMax scale
 
     colsToScaleNorm = ["Political_interest_Total_Score","Yearly_IncomeK","Avg_monthly_household_cost","Avg_size_per_room",
                        "Avg_monthly_expense_on_pets_or_plants","Avg_monthly_expense_when_under_age_21",
                        "AVG_lottary_expanses","Phone_minutes_10_years","Garden_sqr_meter_per_person_in_residancy_area",
-                       "Avg_Satisfaction_with_previous_vote","Overall_happiness_score","Weighted_education_rank"]
+                       "Avg_Satisfaction_with_previous_vote","Overall_happiness_score","Weighted_education_rank",
+                       "Avg_monthly_income_all_years"]
 
     # Iterate over columns and scale them TODO 2
-
+    print('Entering stage 2')
     for colToScale in colsToScaleNorm: # scale by normal
         x_train_cat = stats.scaleNormalSingleColumn(x_train_cat,colToScale)
+        x_ver_cat = stats.scaleNormalSingleColumn(x_ver_cat,colToScale)
+        x_test_cat = stats.scaleNormalSingleColumn(x_test_cat,colToScale)
 
-    colsToScaleMinMax = x_train_cat.select_dtypes(include=[np.number]).columns.diff(colsToScaleNorm)
+    colsToScaleMinMax = x_train_cat.select_dtypes(include=[np.number]).columns.difference(colsToScaleNorm)
     for colToScale in colsToScaleMinMax: # scale by MINMAX
         x_train_cat = stats.scaleMinMaxSingleColumn(x_train_cat,colToScale)
+        x_ver_cat = stats.scaleMinMaxSingleColumn(x_ver_cat,colToScale)
+        x_test_cat = stats.scaleMinMaxSingleColumn(x_test_cat,colToScale)
 
 
     # List of relations between columns, according to Pearson and MI
@@ -222,32 +235,39 @@ def main():
 
 
     # Fill nan by relations TODO 3
-
+    print('Entering stage 3')
     for relation in colToColRel:
-        x_train_cat.info()
+        # x_train_cat.info()
         x_train_cat.update(fillNanWithOtherColumns(x_train_cat,y_train_cat,relation))
-        x_train_cat.info()
+        # x_train_cat.info()
 
-    x_train_cat.to_csv("./after.csv")
-    exit(4)
+    x_train_cat.to_csv("./afterRelations.csv")
+
 
     # Fill nan in category type TODO 4
+    print('Entering stage 4')
     colsCategory = x_train_cat.select_dtypes(include=['category'])
     for col in colsCategory:
         x_train_cat = fillNAByLabelMode(x_train_cat,y_train_cat,col)
         x_ver_cat = fillNATestValMode(x_ver_cat,col)
         x_test_cat = fillNATestValMode(x_test_cat,col)
 
+
     # Fill nan in numeric type TODO 5
+    print('Entering stage 5')
     colsToMean = x_train_cat.select_dtypes(include=[np.number])
     for col in colsToMean:
         x_train_cat = fillNAByLabelMeanMedian(x_train_cat,y_train_cat,col,'Mean')
         x_ver_cat = fillNATestValMeanMedian(x_ver_cat,col,'Mean')
         x_test_cat = fillNATestValMeanMedian(x_test_cat,col,'Mean')
 
+    x_train_cat.to_csv("./afterCatNum.csv")
+    exit(3)
+
 
     # Remove features for the first time TODO 6
-    colsToDrop = []
+    print('Entering stage 6')
+    colsToDrop = oldCols + []
     x_train_cat_filtered = x_train_cat.drop(colsToDrop)
 
     # From now use numeric cols only !!!
