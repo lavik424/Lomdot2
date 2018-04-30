@@ -167,14 +167,10 @@ def displayPlots(x_train, y_train):
 def main():
     df = pd.read_csv("./ElectionsData.csv")
 
-    # df.info()
-    # print(df.Occupation.unique())
-    # df1 = fillNAByLabelMode(df.copy(),'Occupation')
-    # df1.info()
-    # print(df1.Occupation.unique())
 
-    df['IncomeMinusExpenses'] = df.Yearly_IncomeK - df.Yearly_ExpensesK
+    df['IncomeMinusExpenses'] = df.Yearly_IncomeK - df.Yearly_ExpensesK # new column
 
+    # seperate labels from data
     X = df.drop('Vote', axis=1)
     Y = pd.DataFrame(df['Vote'])
 
@@ -183,13 +179,25 @@ def main():
     x_train, x_testVer, y_train, y_testVer = train_test_split(X, Y)
     x_val, x_test, y_val, y_test = train_test_split(x_testVer, y_testVer, train_size=0.6, test_size=0.4)
 
-    # x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
-    #     setTypesToCols(x_train.copy(), y_train.copy(), x_val.copy(), y_val.copy(), x_test.copy(), y_test.copy())
 
+    # Convert data to ONE-HOT & CATEGORY
+    x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
+        setTypesToCols(x_train.copy(), y_train.copy(), x_val.copy(), y_val.copy(), x_test.copy(), y_test.copy())
+
+
+    # List of relations between columns, according to Pearson and MI
     colToColRel = [["Avg_size_per_room", "Political_interest_Total_Score", "Yearly_IncomeK", "Avg_monthly_household_cost"],
                     ["AVG_lottary_expanses", "Avg_monthly_income_all_years", "Avg_monthly_expense_when_under_age_21", "Avg_Satisfaction_with_previous_vote", "Will_vote_only_large_party_Yes", "Will_vote_only_large_party_No", "Looking_at_poles_resultsInt"],
                     ["Last_school_grades", "Will_vote_only_large_party_Maybe", "Most_Important_Issue_Education", "Most_Important_Issue_Military"],
                     ["Avg_monthly_expense_on_pets_or_plants", "MarriedInt", "Garden_sqr_meter_per_person_in_residancy_area", "Phone_minutes_10_years"]]
+
+    # Fill nan by relations
+    for relation in colToColRel:
+        x_train_cat.info()
+        x_train_cat.update(fillNanWithOtherColumns(x_train_cat,y_train_cat,relation))
+        x_train_cat.info()
+
+
 
     # display plots
     # displayPlots(x_train, y_train)
@@ -208,17 +216,17 @@ def main():
     # print(reliefFeatureSelection(x_train,y_train))
 
 
-    # Replace nan with mean
-    colToInt = x_train.select_dtypes(include=[np.number]).columns
-    for col in colToInt:
-        x_train = fillNAByLabelMeanMedian(x_train.copy(),y_train,col,'Mean')
-
-    # LEAVE only numeric columns w/o nan
-    x_train = x_train.select_dtypes(include=[np.number])
-    x_train = x_train.dropna(axis=1, how='any')
-
-    # TEST EMBBDED FEATURE SELECTION BY DECISION TREE
-    embbdedDecisionTree(x_train,y_train) # not working needs data w/o nan
+    # # Replace nan with mean
+    # colToInt = x_train.select_dtypes(include=[np.number]).columns
+    # for col in colToInt:
+    #     x_train = fillNAByLabelMeanMedian(x_train.copy(),y_train,col,'Mean')
+    #
+    # # LEAVE only numeric columns w/o nan
+    # x_train = x_train.select_dtypes(include=[np.number])
+    # x_train = x_train.dropna(axis=1, how='any')
+    #
+    # # TEST EMBBDED FEATURE SELECTION BY DECISION TREE
+    # embbdedDecisionTree(x_train,y_train) # not working needs data w/o nan
 
 
     # x_train_cat_number_only = x_train_cat.select_dtypes(include=np.number)

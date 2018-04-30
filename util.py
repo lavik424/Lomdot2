@@ -228,11 +228,13 @@ def findNearestHitMiss(X:pd.DataFrame,Y:pd.DataFrame,samIndex,hitMiss='h'):
 
 
 def fillNanWithOtherColumns(X:pd.DataFrame,Y:pd.DataFrame,listOfColsWithConnection):
-    col2edit = X.loc[listOfColsWithConnection]
+    col2edit = X[listOfColsWithConnection]
     for col in listOfColsWithConnection:
-        for i in col2edit.shape[0]:
-            if col2edit.iloc[i].hasnans:
+        for i in np.arange(col2edit.shape[0]):
+            counter = 0
+            while col2edit.iloc[i].hasnans and counter < 3:
                 nearestHit = findNearestHitMiss(col2edit,Y,i,'h')
-                goodSample = col2edit.loc[[nearestHit]]
+                goodSample = col2edit.loc[nearestHit]
                 col2edit.iloc[i] = col2edit.iloc[i].fillna(goodSample)
+                counter += 1
     return col2edit
