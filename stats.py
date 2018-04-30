@@ -203,3 +203,4 @@ def plotColvsCol(X1:pd.Series, X2:pd.Series, Y:pd.Series, title="PCA of features
     plotName = './plots/colvscol/' + mainTitle
     plt.savefig(plotName)
     plt.close()
+

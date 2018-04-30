@@ -163,8 +163,21 @@ def displayPlots(x_train, y_train):
     df_train['Vote'] = y_train.copy().values
     describeAndPlot(df_train)
 
-
+"""
+TODO: WORKFLOW
+1) Convert into One-hot and ObjectInt
+2) Scale to Normal or MinMax
+3) Fill in missing values by close samples
+4) Fill in missing values in Category type columns by mode
+5) Fill in missing values in nueric columns by mean (mean label for train, mean of column for test/val
+6) Feature Selection by Filter method
+7) Relief 
+8) Tree
+9) SFS
+10)Accuracy on valdiation data
+"""
 def main():
+    # read data from file
     df = pd.read_csv("./ElectionsData.csv")
 
 
@@ -180,9 +193,25 @@ def main():
     x_val, x_test, y_val, y_test = train_test_split(x_testVer, y_testVer, train_size=0.6, test_size=0.4)
 
 
-    # Convert data to ONE-HOT & CATEGORY
+    # Convert data to ONE-HOT & CATEGORY TODO 1
     x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
         setTypesToCols(x_train.copy(), y_train.copy(), x_val.copy(), y_val.copy(), x_test.copy(), y_test.copy())
+
+    # List of columns to normalize with scaleNormalSingleColumn. For others use MinMax scale
+
+    colsToScaleNorm = ["Political_interest_Total_Score","Yearly_IncomeK","Avg_monthly_household_cost","Avg_size_per_room",
+                       "Avg_monthly_expense_on_pets_or_plants","Avg_monthly_expense_when_under_age_21",
+                       "AVG_lottary_expanses","Phone_minutes_10_years","Garden_sqr_meter_per_person_in_residancy_area",
+                       "Avg_Satisfaction_with_previous_vote","Overall_happiness_score","Weighted_education_rank"]
+
+    # Iterate over columns and scale them TODO 2
+
+    for colToScale in colsToScaleNorm: # scale by normal
+        x_train_cat = stats.scaleNormalSingleColumn(x_train_cat,colToScale)
+
+    colsToScaleMinMax = x_train_cat.select_dtypes(include=[np.number]).columns.diff(colsToScaleNorm)
+    for colToScale in colsToScaleMinMax: # scale by MINMAX
+        x_train_cat = stats.scaleMinMaxSingleColumn(x_train_cat,colToScale)
 
 
     # List of relations between columns, according to Pearson and MI
@@ -191,11 +220,43 @@ def main():
                     ["Last_school_grades", "Will_vote_only_large_party_Maybe", "Most_Important_Issue_Education", "Most_Important_Issue_Military"],
                     ["Avg_monthly_expense_on_pets_or_plants", "MarriedInt", "Garden_sqr_meter_per_person_in_residancy_area", "Phone_minutes_10_years"]]
 
-    # Fill nan by relations
+
+    # Fill nan by relations TODO 3
+
     for relation in colToColRel:
         x_train_cat.info()
         x_train_cat.update(fillNanWithOtherColumns(x_train_cat,y_train_cat,relation))
         x_train_cat.info()
+
+    x_train_cat.to_csv("./after.csv")
+    exit(4)
+
+    # Fill nan in category type TODO 4
+    colsCategory = x_train_cat.select_dtypes(include=['category'])
+    for col in colsCategory:
+        x_train_cat = fillNAByLabelMode(x_train_cat,y_train_cat,col)
+        x_ver_cat = fillNATestValMode(x_ver_cat,col)
+        x_test_cat = fillNATestValMode(x_test_cat,col)
+
+    # Fill nan in numeric type TODO 5
+    colsToMean = x_train_cat.select_dtypes(include=[np.number])
+    for col in colsToMean:
+        x_train_cat = fillNAByLabelMeanMedian(x_train_cat,y_train_cat,col,'Mean')
+        x_ver_cat = fillNATestValMeanMedian(x_ver_cat,col,'Mean')
+        x_test_cat = fillNATestValMeanMedian(x_test_cat,col,'Mean')
+
+
+    # Remove features for the first time TODO 6
+    colsToDrop = []
+    x_train_cat_filtered = x_train_cat.drop(colsToDrop)
+
+    # From now use numeric cols only !!!
+    x_train_cat_filtered = x_train_cat_filtered.select_dtypes(include=[np.number])
+
+
+
+
+
 
 
 

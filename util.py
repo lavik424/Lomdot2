@@ -121,7 +121,7 @@ def histForFloat(df:pd.DataFrame):
     
     
     
-### Function that fill nan cells in object categories with mode value ###
+### Function for TRAIN DATA that fill nan cells in object categories with mode value ###
 def fillNAByLabelMode(X:pd.DataFrame,Y:pd.DataFrame,index):
     if X.index.dtype == 'float':
         print('ERROR needs to be a discrete category')
@@ -133,7 +133,7 @@ def fillNAByLabelMode(X:pd.DataFrame,Y:pd.DataFrame,index):
         mask = df.Vote == p
         colByLabel = df[mask]
         currMode = colByLabel[index].mode().iloc[0] # just the first mode, could be more than 1
-        print('party',p,'mode is:',currMode) # TODO remove
+        # print('party',p,'mode is:',currMode) # TODO remove
         # df.loc[df[df[mask][index].isnull()],index + 'FillByMode'] = currMode
         # df[mask][index] = df[mask][index].fillna(currMode)
         df.loc[(mask) & (df[index + 'FillByMode'].isnull()),index + 'FillByMode'] = currMode
@@ -141,7 +141,19 @@ def fillNAByLabelMode(X:pd.DataFrame,Y:pd.DataFrame,index):
 
 
 
-### Function that fill nan cells in numeric categories with mean or median value ###
+### Function for TEST/VALIDATION DATA that fill nan cells in object categories with mode value ###
+def fillNATestValMode(X:pd.DataFrame,index):
+    if X.index.dtype == 'float':
+        print('ERROR needs to be a discrete category')
+    df = X
+    df[index + 'FillByMode'] = df[index]
+    currMode = df[index].mode().iloc[0]
+    df.loc[(df[index + 'FillByMode'].isnull()), index + 'FillByMode'] = currMode
+    return df
+
+
+
+### Function for TRAIN DATA that fill nan cells in numeric categories with mean or median value ###
 def fillNAByLabelMeanMedian(X:pd.DataFrame,Y:pd.DataFrame,index,meanOrMedian):
     if not meanOrMedian in ('Mean','Median'):
         print('ERROR should state mean or median only')
@@ -162,7 +174,20 @@ def fillNAByLabelMeanMedian(X:pd.DataFrame,Y:pd.DataFrame,index,meanOrMedian):
     return df.drop('Vote', axis=1)
 
 
-
+### Function for TEST/VALIDATION DATA that fill nan cells in numeric categories with mean or median value ###
+def fillNATestValMeanMedian(X:pd.DataFrame,index,meanOrMedian):
+    if not meanOrMedian in ('Mean','Median'):
+        print('ERROR should state mean or median only')
+        return X
+    if X.index.dtype == np.number:
+        print('ERROR needs to be a numeric category')
+        return X
+    df = X
+    newColName = index + 'FillBy' + meanOrMedian
+    df[newColName] = df[index]
+    curr = np.nanmean(df[index]) if meanOrMedian == 'Mean' else np.nanmedian(df[index])
+    df.loc[(df[newColName].isnull()),newColName] = curr
+    return df
 
 
 def distanceBetween2Samples(sam1,sam2):
@@ -229,12 +254,17 @@ def findNearestHitMiss(X:pd.DataFrame,Y:pd.DataFrame,samIndex,hitMiss='h'):
 
 def fillNanWithOtherColumns(X:pd.DataFrame,Y:pd.DataFrame,listOfColsWithConnection):
     col2edit = X[listOfColsWithConnection]
-    for col in listOfColsWithConnection:
-        for i in np.arange(col2edit.shape[0]):
-            counter = 0
-            while col2edit.iloc[i].hasnans and counter < 3:
-                nearestHit = findNearestHitMiss(col2edit,Y,i,'h')
+    # for col in listOfColsWithConnection:
+    for i in np.arange(col2edit.shape[0]):
+        print(i)
+        counter = 0
+        while col2edit.iloc[i].hasnans and counter < 3:
+            nearestHit = findNearestHitMiss(col2edit,Y,i,'h')
+            if nearestHit != -1:
                 goodSample = col2edit.loc[nearestHit]
                 col2edit.iloc[i] = col2edit.iloc[i].fillna(goodSample)
-                counter += 1
+                goodSample = goodSample.fillna(col2edit.iloc[i])
+            counter += 1
     return col2edit
+
+
