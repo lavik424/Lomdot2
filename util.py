@@ -276,8 +276,9 @@ def changeOutlierToMean(X:pd.DataFrame,Y:pd.DataFrame,index,label,lowerBound,upp
     mask = df.Vote == label
     rowsByLabel = df[mask]
     meanValue = np.nanmean(rowsByLabel[index])
+    print('mean of',index,'is:',meanValue)
     if lowerBound != None:
-        df.loc[mask & df[index] < lowerBound] = meanValue
+        df.loc[(mask) & (df[index] < lowerBound),index] = meanValue
     if upperBound != None:
-        df.loc[mask & df[index] > upperBound] = meanValue
+        df.loc[(mask) & (df[index] > upperBound),index] = meanValue
     return df.drop('Vote', axis=1)

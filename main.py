@@ -202,11 +202,20 @@ def main():
     # Detect and remove outliers TODO 1.2
     outlierMap = {'Phone_minutes_10_years':(400,500000),'Avg_size_per_room':(12,None),
                   'Avg_monthly_income_all_years':(None,500000)}
-    for col,boundaries in outlierMap:
-        print(np.min(x_train_cat.loc[x_train_cat['Vote'] == 'Yellows'],col))
+    # x_temp = x_train_cat
+    # x_temp['Vote'] = y_train_cat.values
+    # for col,boundaries in outlierMap.items():
+    #     x_temp['Vote'] = y_train_cat.values
+    #     print(np.min(x_temp.loc[x_temp['Vote'] == 'Yellows',col]))
+    #     x_temp = x_temp.drop('Vote', axis=1)
+    #     x_temp = changeOutlierToMean(x_temp,y_train_cat,col,'Yellows',boundaries[0],boundaries[1])
+    #     x_temp['Vote'] = y_train_cat.values
+    #     print(np.min(x_temp.loc[x_temp['Vote'] == 'Yellows', col]))
+    #     x_temp = x_temp.drop('Vote', axis=1)
+    # exit(2)
+    for col,boundaries in outlierMap.items():
         x_train_cat = changeOutlierToMean(x_train_cat,y_train_cat,col,'Yellows',boundaries[0],boundaries[1])
-        print(np.min(x_train_cat.loc[x_train_cat['Vote'] == 'Yellows'], col))
-    exit(2)
+    
     # List of columns to normalize with scaleNormalSingleColumn. For others use MinMax scale
 
     colsToScaleNorm = ["Political_interest_Total_Score","Yearly_IncomeK","Avg_monthly_household_cost","Avg_size_per_room",
