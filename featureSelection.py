@@ -85,7 +85,7 @@ def reliefFeatureSelection(X:pd.DataFrame,Y:pd.DataFrame,numOfFeaturesToSelect=2
     resW = np.zeros(totalNumOfFeatures,dtype=float)
     resW = resW.reshape((1,-1))
     for i in range(numOfRowsToSample):
-        currIndex = randint(0, numOfRows)
+        currIndex = randint(0, numOfRows - 1)
         nearestHit = findNearestHitMiss(X, Y, currIndex, 'h')
         nearestMiss = findNearestHitMiss(X, Y, currIndex, 'm')
         nearestHit_values = X.loc[[nearestHit]].select_dtypes(include=[np.number]).values

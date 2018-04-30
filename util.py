@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import norm
+from random import randint
 
 
 
@@ -246,8 +247,52 @@ def findNearestHitMiss(X:pd.DataFrame,Y:pd.DataFrame,samIndex,hitMiss='h'):
             minIndex = currIndex
     return minIndex
 
+def heuristicFindNearestHitMiss(X: pd.DataFrame, Y: pd.DataFrame, samIndex, hitMiss='h'):
+    """
+    Finds closet sample to sam in the same/different label. Uses distanceBetween2Samples(), should get normalized data
+    params: X- copy of DataFrame w/o labels, Y- labels , samIndex- index of the sample in X with iloc (X relative row's index)
+            hitMiss- 'h' for hit(same label), 'm' for miss (closest in other label)
+    Return: index of closest sample in the same\other label, original index use with loc
+    """
+    if hitMiss != 'h' and hitMiss != 'm':
+        print('ERROR must state \'h\' for hit or \'m\' for miss')
+        return -1
+    # merge X+Y
+    df = X
+    df['Vote'] = Y.values
 
-    # return np.min(np.vectorize(\
+    sampleToCompare = df.iloc[[samIndex]]
+    realSamIndex = df.iloc[[samIndex]].index[
+        0]  # beacuse its easier to iterate over iloc but loc gives exact location
+    # print('samIndex=',samIndex,'but real index is:',realSamIndex)
+
+    label = sampleToCompare['Vote']  # gets sam's label
+    # print(label)
+    label = label.get_values()[0]
+    # print('The label is:',label)
+    if hitMiss == 'h':
+        mask = df.Vote == label
+    else:
+        mask = df.Vote != label
+    rowsByLabel = df[mask]
+    minIndex = -1
+    minScore = np.inf
+    # print('shape of label=',rowsByLabel.shape[0])
+    for i in range(100):  # Sample 100 rows
+        heuristicIndex = randint(0, rowsByLabel.shape[0]-1)
+        # print('index is:',heuristicIndex)
+        currIndex = rowsByLabel.iloc[[heuristicIndex]].index[0]  # gets the index of the row in the original df
+        # print(currIndex)
+        if realSamIndex == currIndex:
+            continue
+        curr = distanceBetween2Samples(sampleToCompare, rowsByLabel.iloc[[heuristicIndex]])
+        # print(curr)
+        if curr < minScore:
+            minScore = curr
+            minIndex = currIndex
+    return minIndex
+
+        # return np.min(np.vectorize(\
     #     lambda row:distanceBetween2Samples(df.iloc[[samIndex]],row)(rowsByLabel)))
     #         # if row.index != samIndex else np.inf)(rowsByLabel)))
 
@@ -256,10 +301,12 @@ def fillNanWithOtherColumns(X:pd.DataFrame,Y:pd.DataFrame,listOfColsWithConnecti
     col2edit = X[listOfColsWithConnection]
     # for col in listOfColsWithConnection:
     for i in np.arange(col2edit.shape[0]):
-        print(i)
+        print(i) # TODO remove
         counter = 0
         while col2edit.iloc[i].hasnans and counter < 3:
-            nearestHit = findNearestHitMiss(col2edit,Y,i,'h')
+            # nearestHit = findNearestHitMiss(col2edit,Y,i,'h') # slower iterate over all the data
+            # print(col2edit.shape[0]) # TODO remove
+            nearestHit = heuristicFindNearestHitMiss(col2edit, Y, i, 'h') # faster
             if nearestHit != -1:
                 goodSample = col2edit.loc[nearestHit]
                 col2edit.iloc[i] = col2edit.iloc[i].fillna(goodSample)
@@ -276,7 +323,7 @@ def changeOutlierToMean(X:pd.DataFrame,Y:pd.DataFrame,index,label,lowerBound,upp
     mask = df.Vote == label
     rowsByLabel = df[mask]
     meanValue = np.nanmean(rowsByLabel[index])
-    print('mean of',index,'is:',meanValue)
+    # print('mean of',index,'is:',meanValue)
     if lowerBound != None:
         df.loc[(mask) & (df[index] < lowerBound),index] = meanValue
     if upperBound != None:

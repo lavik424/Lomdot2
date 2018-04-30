@@ -165,11 +165,11 @@ def displayPlots(x_train, y_train):
 
 """
 TODO: WORKFLOW
+0) Fill in missing values in Category type columns by mode
 1.1) Convert into One-hot and ObjectInt
 1.2) Detect and remove outliers
 2) Scale to Normal or MinMax
 3) Fill in missing values by close samples
-4) Fill in missing values in Category type columns by mode
 5) Fill in missing values in nueric columns by mean (mean label for train, mean of column for test/val
 6) Feature Selection by Filter method
 7) Relief 
@@ -181,6 +181,8 @@ def main():
     # read data from file
     df = pd.read_csv("./ElectionsData.csv")
     oldCols = df.columns
+    df.info()
+    exit(3)
 
 
     df['IncomeMinusExpenses'] = df.Yearly_IncomeK - df.Yearly_ExpensesK # new column
@@ -215,7 +217,7 @@ def main():
     # exit(2)
     for col,boundaries in outlierMap.items():
         x_train_cat = changeOutlierToMean(x_train_cat,y_train_cat,col,'Yellows',boundaries[0],boundaries[1])
-    
+
     # List of columns to normalize with scaleNormalSingleColumn. For others use MinMax scale
 
     colsToScaleNorm = ["Political_interest_Total_Score","Yearly_IncomeK","Avg_monthly_household_cost","Avg_size_per_room",
