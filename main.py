@@ -181,6 +181,8 @@ def chooseColumns(currCols,oldCols):
     return res
 
 
+
+
 """
 TODO: WORKFLOW
 1) Fill in missing values in Category type columns by mode
@@ -213,7 +215,18 @@ def main():
     x_train, x_testVal, y_train, y_testVal = train_test_split(X, Y)
     x_val, x_test, y_val, y_test = train_test_split(x_testVal, y_testVal, train_size=0.6, test_size=0.4)
 
+
+    # save before any changes
+    x_train_final = x_train
+    x_train_final['Vote'] = y_train.values
+    x_val_final = x_val
+    x_val_final['Vote'] = y_val.values
+    x_test_final = x_test
+    x_test_final['Vote'] = y_test.values
     # Save labels
+    x_train_final.to_csv("./x_train_final.csv")
+    x_val_final.to_csv("./x_val_final.csv")
+    x_test_final.to_csv("./x_test_final.csv")
     y_train.to_csv("./y_train.csv")
     y_val.to_csv("./y_val.csv")
     y_test.to_csv("./y_test.csv")
@@ -317,6 +330,7 @@ def main():
     print('Entering stage 7: Leave only columns after analysis')
     colsAfterWork = chooseColumns(x_train_cat.columns,oldCols)
 
+    pd.DataFrame(colsAfterWork).to_csv("./listOfFeatsNames.csv")
     x_train_cat = x_train_cat[colsAfterWork]
     partiesLabels = y_train_cat['Vote'].unique()
 
@@ -324,7 +338,7 @@ def main():
     # print(len(colsAfterWork))
     # exit(4)
 
-    # Remove features for the first time TODO Step 8
+    # Relief Algorithm TODO Step 8
     print('Entering stage 8: Relief Algorithm')
     numOfSamplesForRelief = [5]
     for i in numOfSamplesForRelief:
@@ -332,7 +346,7 @@ def main():
         reliefRes = reliefFeatureSelection(x_train_cat, y_train_cat,numOfRowsToSample=i)
         pd.DataFrame(reliefRes).to_csv("./relief"+str(i)+".csv")
 
-    ## tring stupid feafures selected by RELIEF
+    ## tring feafures selected by RELIEF
     # featuresFromRelief = ["Most_Important_IssueFillByMode_Financial","OccupationFillByMode_Student_or_Unemployed",
     #                       "Main_transportationFillByMode_Motorcycle_or_truck","Financial_agenda_mattersFillByModeInt",
     #                       "Number_of_valued_Kneset_membersFillByMedian","AVG_lottary_expansesFillByMean",
@@ -350,7 +364,7 @@ def main():
     # exit(8)
 
 
-    # Remove features for the first time TODO Step 9
+    # Decision tree Algorithm TODO Step 9
     print('Entering stage 9: Decision tree Algorithm')
     treeRankedFeatures,confusionMatrix = embeddedDecisionTree(x_train_cat, y_train_cat)
     # make nice confusion matrix with labels
@@ -361,13 +375,13 @@ def main():
     pd.DataFrame(treeRankedFeatures).to_csv("./treeRankedFeatures.csv")
 
 
-    # Remove features for the first time TODO Step 10
+    # SFS Algorithm TODO Step 10
     print('Entering stage 10: SFS Algorithm')
     # estimator = KNeighborsClassifier(n_neighbors=5)
     estimator = tree.DecisionTreeClassifier(criterion="entropy")
     # print('Accuracy from KNN:',scoreForClassfier(estimator,x_train_cat,y_train_cat))
 
-    numOfFeaturesToSelect = 5
+    numOfFeaturesToSelect = 30
     sfsSelection = sfs(x_train_cat,y_train_cat,k=numOfFeaturesToSelect,
                        clf=estimator,score=scoreForClassfier)
     print(sfsSelection)
@@ -377,18 +391,47 @@ def main():
     print('SFS has selected those features in this order:\n',sfsFeaturesNames)
     pd.DataFrame(sfsFeaturesNames).to_csv("./sfsFeaturesNameTree.csv")
 
-    exit(10)
 
-    hybridFeatures = []
 
-    # Remove features for the first time TODO Step 11
+    hybridFeatures = pd.read_csv("finalSelection.csv")
+    hybridFeatures = list(hybridFeatures['Final_selection'])
+    x_train_cat = x_train_cat[hybridFeatures]
+    # Accuracy on validation-set TODO Step 11
     print('Entering stage 11: \tD-Day\nAccuracy on validation-set')
-    # Load validation-set after preprocessing workflow
+    # Load validation/test-set after preprocessing workflow
     x_val_cat = pd.read_csv("x_val_cat.csv",index_col=0)
     y_val_cat = pd.read_csv("y_val.csv",index_col=0)
+    x_test_cat = pd.read_csv("x_test_cat.csv",index_col=0)
+    y_test_cat = pd.read_csv("y_test.csv",index_col=0)
+
+    x_val_cat = x_val_cat[hybridFeatures]
+    x_test_cat = x_test_cat[hybridFeatures]
 
 
+    # save after all changes and the final features selection
+    x_train_final = x_train_cat
+    x_train_final['Vote'] = y_train_cat.values
 
+    x_val_final = x_val_cat
+    x_val_final['Vote'] = y_val_cat.values
+
+    x_test_final = x_test_cat
+    x_test_final['Vote'] = y_test_cat.values
+
+    # Save
+    x_train_final.to_csv("./x_train_final.csv")
+    x_val_final.to_csv("./x_val_final.csv")
+    x_test_final.to_csv("./x_test_final.csv")
+
+    # train knn and tree and test on validation
+    estimator = KNeighborsClassifier(n_neighbors=5)
+    estimator.fit(x_train_cat, y_train_cat)
+    accuracy = accuracy_score(y_val_cat, estimator.predict(x_val_cat))
+    print("The KNN classifier accuracy is:",accuracy)
+    estimator = tree.DecisionTreeClassifier(criterion="entropy")
+    estimator.fit(x_train_cat, y_train_cat)
+    accuracy = accuracy_score(y_val_cat, estimator.predict(x_val_cat))
+    print("The Tree classifier accuracy is:", accuracy)
 
 
 
