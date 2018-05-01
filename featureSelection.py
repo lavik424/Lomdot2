@@ -14,6 +14,7 @@ from sklearn.metrics import accuracy_score
 
 from random import randint
 
+
 def sfs(x:pd.DataFrame, y:pd.DataFrame, k, clf, score):
     """
     :param x: feature set to be trained using clf. list of lists.
@@ -28,7 +29,7 @@ def sfs(x:pd.DataFrame, y:pd.DataFrame, k, clf, score):
 
     features_select = [False for i in range(len(x.columns))]
     num_features_selected = 0
-
+    orderOfSelect = []
 
     while num_features_selected < k:
         max_score = 0
@@ -45,11 +46,12 @@ def sfs(x:pd.DataFrame, y:pd.DataFrame, k, clf, score):
 
         # add the best feature
         features_select[max_feature] = True
+        orderOfSelect.append(max_feature)
         num_features_selected += 1
         print('Accuracy after',num_features_selected,'features is:',max_score)
 
-    return [i for i in range(len(features_select)) if features_select[i]]
-
+    # return [i for i in range(len(features_select)) if features_select[i]]
+    return orderOfSelect
 
 
 
@@ -58,7 +60,9 @@ def sfs(x:pd.DataFrame, y:pd.DataFrame, k, clf, score):
 def scoreForClassfier(clf, examples, classification):
     numOfSplits = 4
     totalAccuracy = 0
-
+    # numOflabels = classification['Vote'].nunique()
+    # totalConfusion = np.zeros((numOflabels, numOflabels))
+    # partiesLabels = classification['Vote'].unique()
     kf = KFold(n_splits=numOfSplits)
     for train_index, valid_index in kf.split(examples):
         # split the data to train set and validation set:
@@ -69,6 +73,8 @@ def scoreForClassfier(clf, examples, classification):
         clf.fit(examples_train, classification_train)
         # test the classfier on validation set
         totalAccuracy += accuracy_score(classification_valid, clf.predict(examples_valid))
+        # totalConfusion += confusion_matrix(classification_valid.values, clf.predict(examples_valid),
+        #                                    labels=partiesLabels)
 
     totalAccuracy = totalAccuracy / numOfSplits
     return totalAccuracy
@@ -94,7 +100,7 @@ def reliefFeatureSelection(X:pd.DataFrame,Y:pd.DataFrame,numOfRowsToSample=5):
         nearestHit_values = X.loc[[nearestHit]].select_dtypes(include=[np.number]).values
         nearestMiss_values = X.loc[[nearestMiss]].select_dtypes(include=[np.number]).values
         curr_values = X.iloc[[currIndex]].select_dtypes(include=[np.number]).values
-        resW += (curr_values - nearestHit_values)**2 - (curr_values - nearestMiss_values)**2
+        resW += (curr_values - nearestMiss_values)**2 - (curr_values - nearestHit_values)**2
 
     # print(resW)
     resWMap = list(zip(X.select_dtypes(include=[np.number]).columns,*resW))

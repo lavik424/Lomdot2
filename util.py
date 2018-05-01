@@ -127,10 +127,10 @@ def fillNAByLabelMode(X:pd.DataFrame,Y:pd.DataFrame,index):
     if X.index.dtype == 'float':
         print('ERROR needs to be a discrete category')
     df = X
-    # df['Vote'] = Y.copy().values
-    df.loc[:, 'Vote'] = Y['Vote']
+    df['Vote'] = Y.copy().values
+    # df.loc[:, 'Vote'] = Y['Vote']
     partyList = df['Vote'].unique()
-    df.loc[:,index + 'FillByMode'] = df[index]
+    df[index + 'FillByMode'] = df[index]
     for p in partyList:
         mask = df.Vote == p
         colByLabel = df[mask]
@@ -148,7 +148,7 @@ def fillNATestValMode(X:pd.DataFrame,index):
     if X.index.dtype == 'float':
         print('ERROR needs to be a discrete category')
     df = X
-    df.loc[:,index + 'FillByMode'] = df[index]
+    df[index + 'FillByMode'] = df[index]
     currMode = df[index].mode().iloc[0]
     df.loc[(df[index + 'FillByMode'].isnull()), index + 'FillByMode'] = currMode
     return df
