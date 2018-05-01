@@ -7,7 +7,7 @@ from sklearn.model_selection import KFold
 from util import findNearestHitMiss
 
 from sklearn.metrics import confusion_matrix
-# from pandas import ConfusionMatrix
+# from pandas_ml import ConfusionMatrix
 from sklearn import tree
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
@@ -37,7 +37,7 @@ def sfs(x:pd.DataFrame, y:pd.DataFrame, k, clf, score):
             # examine each unselected feature
             if not features_select[i]:
                 features_select[i] = True
-                current_score = score(classifier=clf,examples=x[:,features_select],classification=y)
+                current_score = score(clf=clf,examples=x.iloc[:,features_select],classification=y)
                 if current_score > max_score:
                     max_score = current_score
                     max_feature = i
@@ -46,6 +46,7 @@ def sfs(x:pd.DataFrame, y:pd.DataFrame, k, clf, score):
         # add the best feature
         features_select[max_feature] = True
         num_features_selected += 1
+        print('Accuracy after',num_features_selected,'features is:',max_score)
 
     return [i for i in range(len(features_select)) if features_select[i]]
 
@@ -61,8 +62,8 @@ def scoreForClassfier(clf, examples, classification):
     kf = KFold(n_splits=numOfSplits)
     for train_index, valid_index in kf.split(examples):
         # split the data to train set and validation set:
-        examples_train, examples_valid = examples[train_index], examples[valid_index]
-        classification_train, classification_valid = classification[train_index], classification[valid_index]
+        examples_train, examples_valid = examples.iloc[train_index], examples.iloc[valid_index]
+        classification_train, classification_valid = classification.iloc[train_index], classification.iloc[valid_index]
 
         # train the knn on train set
         clf.fit(examples_train, classification_train)
@@ -71,6 +72,8 @@ def scoreForClassfier(clf, examples, classification):
 
     totalAccuracy = totalAccuracy / numOfSplits
     return totalAccuracy
+
+
 
 
 def reliefFeatureSelection(X:pd.DataFrame,Y:pd.DataFrame,numOfRowsToSample=5):
@@ -106,6 +109,7 @@ def embbdedDecisionTree(X:pd.DataFrame,Y:pd.DataFrame,numOfSplits=4,numOfFeature
     numOflabels = Y['Vote'].nunique()
     totalConfusion = np.zeros((numOflabels, numOflabels))
     X = X.select_dtypes(include=[np.number])
+    partiesLabels = Y['Vote'].unique()
     # run kfold on trees
     kf = KFold(n_splits=numOfSplits, shuffle=True)
     for train_index, test_index in kf.split(X):
@@ -118,14 +122,17 @@ def embbdedDecisionTree(X:pd.DataFrame,Y:pd.DataFrame,numOfSplits=4,numOfFeature
         estimator.fit(features_train, classification_train)
         # test the tree on validation set
         totalAccuracy += accuracy_score(classification_test, estimator.predict(features_test))
-        totalConfusion += confusion_matrix(classification_test.values, estimator.predict(features_test))
+        totalConfusion += confusion_matrix(classification_test.values, estimator.predict(features_test),labels=partiesLabels)
 
     # calculate accuracy and confusion matrix
     totalAccuracy = totalAccuracy / numOfSplits
     totalConfusion = np.rint(totalConfusion).astype(int)
 
-    print(totalAccuracy)
-    print(totalConfusion)
+    print('Total Accuracy of tree is:',totalAccuracy)
+    # print('Confusion Matrix of tree is:\n',totalConfusion)
     resWMap = list(zip(X.select_dtypes(include=[np.number]).columns, (estimator.feature_importances_)))
     resWMap = sorted(resWMap,key=itemgetter(1),reverse=True)
-    print(resWMap)
+    # print(resWMap)
+    return resWMap,totalConfusion
+
+
