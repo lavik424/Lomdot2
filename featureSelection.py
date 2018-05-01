@@ -73,7 +73,7 @@ def scoreForClassfier(clf, examples, classification):
     return totalAccuracy
 
 
-def reliefFeatureSelection(X:pd.DataFrame,Y:pd.DataFrame,numOfFeaturesToSelect=20,numOfRowsToSample=5):
+def reliefFeatureSelection(X:pd.DataFrame,Y:pd.DataFrame,numOfRowsToSample=5):
     """
     Relief algorithm, best accept normalized data
     params: X- copy of DataFrame w/o labels, Y- labels , numOfFeaturesToSelect-int between 1 to num of
@@ -96,7 +96,7 @@ def reliefFeatureSelection(X:pd.DataFrame,Y:pd.DataFrame,numOfFeaturesToSelect=2
     # print(resW)
     resWMap = list(zip(X.select_dtypes(include=[np.number]).columns,*resW))
     # print(resWMap)
-    return sorted(resWMap[:numOfFeaturesToSelect],key=itemgetter(1),reverse=True)
+    return sorted(resWMap,key=itemgetter(1),reverse=True)
 
 
 

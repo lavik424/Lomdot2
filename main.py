@@ -47,10 +47,10 @@ def setTypesToCols(trainX:pd.DataFrame, trainY:pd.DataFrame,
                    validX:pd.DataFrame, validY: pd.DataFrame,
                    testX: pd.DataFrame, testY: pd.DataFrame):
 
-    colOfMultiCategorial = ["Most_Important_Issue", "Will_vote_only_large_party", "Main_transportation",
-                           "Occupation"]
+    colOfMultiCategorial = ["Most_Important_IssueFillByMode", "Will_vote_only_large_partyFillByMode",
+                            "Main_transportationFillByMode", "OccupationFillByMode"]
 
-    colOfOrderedCategorial = ["Age_group"]
+    colOfOrderedCategorial = ["Age_groupFillByMode"]
 
     colOfBinaryCategorial = [c for c in trainX.keys()[trainX.dtypes.map(lambda x: x=='object')]
                        if c not in colOfMultiCategorial and c not in colOfOrderedCategorial]
@@ -163,128 +163,177 @@ def displayPlots(x_train, y_train):
     df_train['Vote'] = y_train.copy().values
     describeAndPlot(df_train)
 
+def chooseColumns(currCols,oldCols):
+    modeSuffix = 'FillByModeInt'
+    onehotSuffix = 'FillByMode_'
+    meanSuffix = 'FillByMean'
+    meadianSuffix = 'FillByMedian'
+    nanSuffix = '_nan'
+    # currList= list of original cols name, res= set of cols to continue with
+    res = [colName for colName in currCols if onehotSuffix in colName]
+    res += [colName for colName in currCols if (meadianSuffix in colName) & (meanSuffix not in colName)]
+    currListMode = [colName for colName in oldCols if (colName + modeSuffix) in currCols]
+    res += [(colName + modeSuffix) for colName in currListMode]
+    currListMean = [colName for colName in oldCols if ((colName + meanSuffix) in currCols) & (colName not in currListMode)]
+    res += [(colName + meanSuffix) for colName in currListMean if (colName + meadianSuffix) not in res]
+    res = [colName for colName in res if nanSuffix not in colName]
+    return res
+
+
 """
 TODO: WORKFLOW
-0) Fill in missing values in Category type columns by mode
-1.1) Convert into One-hot and ObjectInt
-1.2) Detect and remove outliers
-2) Scale to Normal or MinMax
-3) Fill in missing values by close samples
-5) Fill in missing values in nueric columns by mean (mean label for train, mean of column for test/val
-6) Feature Selection by Filter method
-7) Relief 
-8) Tree
-9) SFS
-10)Accuracy on valdiation data
+1) Fill in missing values in Category type columns by mode
+2) Convert into One-hot and ObjectInt
+3) Detect and remove outliers
+4) Scale to Normal or MinMax
+5) Fill in missing values by close samples
+6) Fill in missing values in numeric columns by mean (mean label for train, mean of column for test/val
+7) Leave only columns after analysis
+8) Feature Selection by Filter method
+8) Relief 
+9) Tree
+10)SFS
+11)Accuracy on valdiation data
 """
 def main():
     # read data from file
     df = pd.read_csv("./ElectionsData.csv")
     oldCols = df.columns
-    df.info()
-    exit(3)
+    #
+    #
+    #
+    # df['IncomeMinusExpenses'] = df.Yearly_IncomeK - df.Yearly_ExpensesK # new column
+    #
+    # # seperate labels from data
+    # X = df.drop('Vote', axis=1)
+    # Y = pd.DataFrame(df['Vote'])
+    #
+    # # Split to train, valid, test
+    # np.random.seed(0)
+    # x_train, x_testVal, y_train, y_testVal = train_test_split(X, Y)
+    # x_val, x_test, y_val, y_test = train_test_split(x_testVal, y_testVal, train_size=0.6, test_size=0.4)
 
-
-    df['IncomeMinusExpenses'] = df.Yearly_IncomeK - df.Yearly_ExpensesK # new column
-
-    # seperate labels from data
-    X = df.drop('Vote', axis=1)
-    Y = pd.DataFrame(df['Vote'])
-
-    # Split to train, valid, test
-    np.random.seed(0)
-    x_train, x_testVer, y_train, y_testVer = train_test_split(X, Y)
-    x_val, x_test, y_val, y_test = train_test_split(x_testVer, y_testVer, train_size=0.6, test_size=0.4)
-
-    print('Entering stage 1')
-    # Convert data to ONE-HOT & CATEGORY TODO 1
-    x_train_cat, y_train_cat, x_ver_cat, y_ver_cat, x_test_cat, y_test_cat = \
-        setTypesToCols(x_train.copy(), y_train.copy(), x_val.copy(), y_val.copy(), x_test.copy(), y_test.copy())
-
-    # Detect and remove outliers TODO 1.2
-    outlierMap = {'Phone_minutes_10_years':(400,500000),'Avg_size_per_room':(12,None),
-                  'Avg_monthly_income_all_years':(None,500000)}
-    # x_temp = x_train_cat
-    # x_temp['Vote'] = y_train_cat.values
+    #
+    # # Fill nan in category type TODO Step 1
+    # print('Entering stage 1: Fill in missing values in Category type columns by mode')
+    # colsCategory = x_train.select_dtypes(include=['object'])
+    # for col in colsCategory:
+    #     x_train = fillNAByLabelMode(x_train,y_train,col)
+    #     x_val = fillNATestValMode(x_val,col)
+    #     x_test = fillNATestValMode(x_test,col)
+    #
+    #
+    # print('Entering stage 2: Convert into One-hot and ObjectInt')
+    # # Convert data to ONE-HOT & CATEGORY TODO Step 2
+    # x_train_cat, y_train_cat, x_val_cat, y_val_cat, x_test_cat, y_test_cat = \
+    #     setTypesToCols(x_train.copy(), y_train.copy(), x_val.copy(), y_val.copy(), x_test.copy(), y_test.copy())
+    #
+    #
+    # print('Entering stage 3: Detect and remove outliers')
+    # # Detect and remove outliers TODO Step 3
+    # outlierMap = {'Phone_minutes_10_years':(400,500000),'Avg_size_per_room':(12,None),
+    #               'Avg_monthly_income_all_years':(None,500000)}
+    # # x_temp = x_train_cat
+    # # x_temp['Vote'] = y_train_cat.values
+    # # for col,boundaries in outlierMap.items():
+    # #     x_temp['Vote'] = y_train_cat.values
+    # #     print(np.min(x_temp.loc[x_temp['Vote'] == 'Yellows',col]))
+    # #     x_temp = x_temp.drop('Vote', axis=1)
+    # #     x_temp = changeOutlierToMean(x_temp,y_train_cat,col,'Yellows',boundaries[0],boundaries[1])
+    # #     x_temp['Vote'] = y_train_cat.values
+    # #     print(np.min(x_temp.loc[x_temp['Vote'] == 'Yellows', col]))
+    # #     x_temp = x_temp.drop('Vote', axis=1)
+    # # exit(2)
     # for col,boundaries in outlierMap.items():
-    #     x_temp['Vote'] = y_train_cat.values
-    #     print(np.min(x_temp.loc[x_temp['Vote'] == 'Yellows',col]))
-    #     x_temp = x_temp.drop('Vote', axis=1)
-    #     x_temp = changeOutlierToMean(x_temp,y_train_cat,col,'Yellows',boundaries[0],boundaries[1])
-    #     x_temp['Vote'] = y_train_cat.values
-    #     print(np.min(x_temp.loc[x_temp['Vote'] == 'Yellows', col]))
-    #     x_temp = x_temp.drop('Vote', axis=1)
-    # exit(2)
-    for col,boundaries in outlierMap.items():
-        x_train_cat = changeOutlierToMean(x_train_cat,y_train_cat,col,'Yellows',boundaries[0],boundaries[1])
+    #     x_train_cat = changeOutlierToMean(x_train_cat,y_train_cat,col,'Yellows',boundaries[0],boundaries[1])
+    #
+    #
+    # # List of columns to normalize with scaleNormalSingleColumn. For others use MinMax scale
+    # colsToScaleNorm = ["Political_interest_Total_Score","Yearly_IncomeK","Avg_monthly_household_cost","Avg_size_per_room",
+    #                    "Avg_monthly_expense_on_pets_or_plants","Avg_monthly_expense_when_under_age_21",
+    #                    "AVG_lottary_expanses","Phone_minutes_10_years","Garden_sqr_meter_per_person_in_residancy_area",
+    #                    "Avg_Satisfaction_with_previous_vote","Overall_happiness_score","Weighted_education_rank",
+    #                    "Avg_monthly_income_all_years"]
+    #
+    #
+    # # Iterate over columns and scale them TODO 4
+    # print('Entering stage 4: Scale to Normal or MinMax')
+    # for colToScale in colsToScaleNorm: # scale by normal
+    #     x_train_cat = stats.scaleNormalSingleColumn(x_train_cat,colToScale)
+    #     x_val_cat = stats.scaleNormalSingleColumn(x_val_cat,colToScale)
+    #     x_test_cat = stats.scaleNormalSingleColumn(x_test_cat,colToScale)
+    #
+    # colsToScaleMinMax = x_train_cat.select_dtypes(include=[np.number]).columns.difference(colsToScaleNorm) # rest of numeric cols
+    # for colToScale in colsToScaleMinMax: # scale by MINMAX
+    #     x_train_cat = stats.scaleMinMaxSingleColumn(x_train_cat,colToScale)
+    #     x_val_cat = stats.scaleMinMaxSingleColumn(x_val_cat,colToScale)
+    #     x_test_cat = stats.scaleMinMaxSingleColumn(x_test_cat,colToScale)
+    #
+    #
+    # # List of relations between columns, according to Pearson and MI
+    # colToColRel = [["Avg_size_per_room", "Political_interest_Total_Score", "Yearly_IncomeK", "Avg_monthly_household_cost"],
+    #                 ["AVG_lottary_expanses", "Avg_monthly_income_all_years", "Avg_monthly_expense_when_under_age_21", "Avg_Satisfaction_with_previous_vote", "Will_vote_only_large_partyFillByMode_Yes", "Will_vote_only_large_partyFillByMode_No", "Looking_at_poles_resultsFillByModeInt"],
+    #                 ["Last_school_grades", "Will_vote_only_large_partyFillByMode_Maybe", "Most_Important_IssueFillByMode_Education", "Most_Important_IssueFillByMode_Military"],
+    #                 ["Avg_monthly_expense_on_pets_or_plants", "MarriedFillByModeInt", "Garden_sqr_meter_per_person_in_residancy_area", "Phone_minutes_10_years"]]
+    #
+    #
+    # # Fill nan by relations TODO 5
+    # print('Entering stage 5: Fill in missing values by close samples')
+    # for relation in colToColRel:
+    #     # x_train_cat.info()
+    #     print('rel=',relation)
+    #     x_train_cat.update(fillNanWithOtherColumns(x_train_cat,y_train_cat,relation))
+    #     # x_train_cat.info()
+    #
+    # x_train_cat.to_csv("./afterRelations.csv")
+    #
+    #
+    # # Fill nan in numeric type TODO 6
+    # print('Entering stage 6: Fill in missing values in numeric columns by mean')
+    # colsFilledWithMode = x_train_cat.select_dtypes(include=[np.number]).columns
+    # suffix = 'FillByMode'
+    # colsFilledWithMode = [colName for colName in colsFilledWithMode if suffix in colName]
+    # colsToMedian = ['Num_of_kids_born_last_10_years','Number_of_valued_Kneset_members',
+    #                 'Number_of_differnt_parties_voted_for']
+    # for col in colsToMedian:
+    #     x_train_cat = fillNAByLabelMeanMedian(x_train_cat,y_train_cat,col,'Median')
+    #     x_val_cat = fillNATestValMeanMedian(x_val_cat,col,'Median')
+    #     x_test_cat = fillNATestValMeanMedian(x_test_cat,col,'Median')
+    #
+    # colsToMean = x_train_cat.select_dtypes(include=[np.number]).columns.difference(colsToMedian)
+    # colsToMean = colsToMean.difference(colsFilledWithMode)
+    # for col in colsToMean:
+    #     x_train_cat = fillNAByLabelMeanMedian(x_train_cat,y_train_cat,col,'Mean')
+    #     x_val_cat = fillNATestValMeanMedian(x_val_cat,col,'Mean')
+    #     x_test_cat = fillNATestValMeanMedian(x_test_cat,col,'Mean')
+    #
+    # x_train_cat.to_csv("./afterCatNum.csv")
+    #
 
-    # List of columns to normalize with scaleNormalSingleColumn. For others use MinMax scale
+    ### Methdic Stop - start again from here###
 
-    colsToScaleNorm = ["Political_interest_Total_Score","Yearly_IncomeK","Avg_monthly_household_cost","Avg_size_per_room",
-                       "Avg_monthly_expense_on_pets_or_plants","Avg_monthly_expense_when_under_age_21",
-                       "AVG_lottary_expanses","Phone_minutes_10_years","Garden_sqr_meter_per_person_in_residancy_area",
-                       "Avg_Satisfaction_with_previous_vote","Overall_happiness_score","Weighted_education_rank",
-                       "Avg_monthly_income_all_years"]
+    x_train_cat = pd.read_csv("./x_train_cat.csv",index_col=0)
+    y_train_cat = pd.read_csv("./y_train_cat.csv",index_col=0)
 
-    # Iterate over columns and scale them TODO 2
-    print('Entering stage 2')
-    for colToScale in colsToScaleNorm: # scale by normal
-        x_train_cat = stats.scaleNormalSingleColumn(x_train_cat,colToScale)
-        x_ver_cat = stats.scaleNormalSingleColumn(x_ver_cat,colToScale)
-        x_test_cat = stats.scaleNormalSingleColumn(x_test_cat,colToScale)
+    # Remove features for the first time TODO 7
+    print('Entering stage 7: Leave only columns after analysis')
+    colsAfterWork = chooseColumns(x_train_cat.columns,oldCols)
 
-    colsToScaleMinMax = x_train_cat.select_dtypes(include=[np.number]).columns.difference(colsToScaleNorm)
-    for colToScale in colsToScaleMinMax: # scale by MINMAX
-        x_train_cat = stats.scaleMinMaxSingleColumn(x_train_cat,colToScale)
-        x_ver_cat = stats.scaleMinMaxSingleColumn(x_ver_cat,colToScale)
-        x_test_cat = stats.scaleMinMaxSingleColumn(x_test_cat,colToScale)
+    x_train_cat = x_train_cat[colsAfterWork]
 
 
-    # List of relations between columns, according to Pearson and MI
-    colToColRel = [["Avg_size_per_room", "Political_interest_Total_Score", "Yearly_IncomeK", "Avg_monthly_household_cost"],
-                    ["AVG_lottary_expanses", "Avg_monthly_income_all_years", "Avg_monthly_expense_when_under_age_21", "Avg_Satisfaction_with_previous_vote", "Will_vote_only_large_party_Yes", "Will_vote_only_large_party_No", "Looking_at_poles_resultsInt"],
-                    ["Last_school_grades", "Will_vote_only_large_party_Maybe", "Most_Important_Issue_Education", "Most_Important_Issue_Military"],
-                    ["Avg_monthly_expense_on_pets_or_plants", "MarriedInt", "Garden_sqr_meter_per_person_in_residancy_area", "Phone_minutes_10_years"]]
+    # pd.DataFrame(colsAfterWork).to_csv("./selected.csv")
+    # print(len(colsAfterWork))
+    # exit(4)
+
+    # Remove features for the first time TODO 8
+    print('Entering stage 8')
+    for i in [10,50,100]:
+        reliefRes = reliefFeatureSelection(x_train_cat, y_train_cat,numOfRowsToSample=i)
+        pd.DataFrame(reliefRes).to_csv("./relief"+str(i)+".csv")
 
 
-    # Fill nan by relations TODO 3
-    print('Entering stage 3')
-    for relation in colToColRel:
-        # x_train_cat.info()
-        x_train_cat.update(fillNanWithOtherColumns(x_train_cat,y_train_cat,relation))
-        # x_train_cat.info()
 
-    x_train_cat.to_csv("./afterRelations.csv")
-
-
-    # Fill nan in category type TODO 4
-    print('Entering stage 4')
-    colsCategory = x_train_cat.select_dtypes(include=['category'])
-    for col in colsCategory:
-        x_train_cat = fillNAByLabelMode(x_train_cat,y_train_cat,col)
-        x_ver_cat = fillNATestValMode(x_ver_cat,col)
-        x_test_cat = fillNATestValMode(x_test_cat,col)
-
-
-    # Fill nan in numeric type TODO 5
-    print('Entering stage 5')
-    colsToMean = x_train_cat.select_dtypes(include=[np.number])
-    for col in colsToMean:
-        x_train_cat = fillNAByLabelMeanMedian(x_train_cat,y_train_cat,col,'Mean')
-        x_ver_cat = fillNATestValMeanMedian(x_ver_cat,col,'Mean')
-        x_test_cat = fillNATestValMeanMedian(x_test_cat,col,'Mean')
-
-    x_train_cat.to_csv("./afterCatNum.csv")
-    exit(3)
-
-
-    # Remove features for the first time TODO 6
-    print('Entering stage 6')
-    colsToDrop = oldCols + []
-    x_train_cat_filtered = x_train_cat.drop(colsToDrop)
-
-    # From now use numeric cols only !!!
-    x_train_cat_filtered = x_train_cat_filtered.select_dtypes(include=[np.number])
 
 
 

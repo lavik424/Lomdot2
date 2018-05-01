@@ -278,14 +278,14 @@ def heuristicFindNearestHitMiss(X: pd.DataFrame, Y: pd.DataFrame, samIndex, hitM
     minIndex = -1
     minScore = np.inf
     # print('shape of label=',rowsByLabel.shape[0])
-    for i in range(100):  # Sample 100 rows
-        heuristicIndex = randint(0, rowsByLabel.shape[0]-1)
+    randArray = np.random.randint(rowsByLabel.shape[0],size=100)
+    for i in randArray:  # Sample 100 indices
         # print('index is:',heuristicIndex)
-        currIndex = rowsByLabel.iloc[[heuristicIndex]].index[0]  # gets the index of the row in the original df
+        currIndex = rowsByLabel.iloc[[i]].index[0]  # gets the index of the row in the original df
         # print(currIndex)
         if realSamIndex == currIndex:
             continue
-        curr = distanceBetween2Samples(sampleToCompare, rowsByLabel.iloc[[heuristicIndex]])
+        curr = distanceBetween2Samples(sampleToCompare, rowsByLabel.iloc[[i]])
         # print(curr)
         if curr < minScore:
             minScore = curr
@@ -301,7 +301,8 @@ def fillNanWithOtherColumns(X:pd.DataFrame,Y:pd.DataFrame,listOfColsWithConnecti
     col2edit = X[listOfColsWithConnection]
     # for col in listOfColsWithConnection:
     for i in np.arange(col2edit.shape[0]):
-        print(i) # TODO remove
+        if i % 100 == 0:
+            print(i) # TODO remove
         counter = 0
         while col2edit.iloc[i].hasnans and counter < 3:
             # nearestHit = findNearestHitMiss(col2edit,Y,i,'h') # slower iterate over all the data
