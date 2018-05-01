@@ -93,27 +93,6 @@ def plotPCA(X:pd.DataFrame, Y:pd.Series, title="PCA of features", normalize = "m
     plt.show()
 
 
-# Not working 
-### Normalize one column (index) in a df.
-### index = col name , method = MinMax for minMaxScaler or Standard for StandardScaler
-# def scaleSingleColumn(df: pd.DataFrame, index, method='MinMax'):
-#     if method not in ('MinMax', 'Standard'):
-#         print('ERROR should state MinMax or Standard only')
-#         return df
-#     if index not in df.columns:
-#         print('ERROR index have to be valid column name in df')
-#         return df
-#     if method == 'MinMax':
-#         scaler = MinMaxScaler() if method == 'MinMax' else StandardScaler()
-#
-#     print('Before scaler:\n')#,df.index.describe())
-#     print(df[index].head(5))
-#     df.loc[:,df[index]] = scaler.fit_transform(df.index)
-#     print('After scaler:\n')#,df.index.describe())
-#     print(df[index].head(5))
-#     return df
-
-
 
 ### Normalize by MinMax one column (index) in a df.
 ### index = col name

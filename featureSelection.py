@@ -1,57 +1,17 @@
-from operator import itemgetter
+
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
 
-from util import findNearestHitMiss
 
+from operator import itemgetter
 from sklearn.metrics import confusion_matrix
 # from pandas_ml import ConfusionMatrix
 from sklearn import tree
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 
-from random import randint
-
-
-def sfs(x:pd.DataFrame, y:pd.DataFrame, k, clf, score):
-    """
-    :param x: feature set to be trained using clf. list of lists.
-    :param y: labels corresponding to x. list.
-    :param k: number of features to select. int
-    :param clf: classifier to be trained on the feature subset.
-    :param score: utility function for the algorithm, that receives clf, feature subset and labeles, returns a score.
-    :return: list of chosen feature indexes
-    """
-
-    # create binary vector for feature selection
-
-    features_select = [False for i in range(len(x.columns))]
-    num_features_selected = 0
-    orderOfSelect = []
-
-    while num_features_selected < k:
-        max_score = 0
-        max_feature = 0
-        for i in range(len(features_select)):
-            # examine each unselected feature
-            if not features_select[i]:
-                features_select[i] = True
-                current_score = score(clf=clf,examples=x.iloc[:,features_select],classification=y)
-                if current_score > max_score:
-                    max_score = current_score
-                    max_feature = i
-                features_select[i] = False
-
-        # add the best feature
-        features_select[max_feature] = True
-        orderOfSelect.append(max_feature)
-        num_features_selected += 1
-        print('Accuracy after',num_features_selected,'features is:',max_score)
-
-    # return [i for i in range(len(features_select)) if features_select[i]]
-    return orderOfSelect
 
 
 
@@ -82,35 +42,7 @@ def scoreForClassfier(clf, examples, classification):
 
 
 
-def reliefFeatureSelection(X:pd.DataFrame,Y:pd.DataFrame,numOfRowsToSample=5):
-    """
-    Relief algorithm, best accept normalized data
-    params: X- copy of DataFrame w/o labels, Y- labels , numOfFeaturesToSelect-int between 1 to num of
-            numOfRowsToSample- int T in pesudo-code, number of times to sample rows from data
-    Return: sorted list of tuples (feature_name,feature_score) at size numOfFeaturesToSelect
-    """
-    totalNumOfFeatures = X.select_dtypes(include=[np.number]).shape[1]
-    numOfRows = X.shape[0]
-    resW = np.zeros(totalNumOfFeatures,dtype=float)
-    resW = resW.reshape((1,-1))
-    for i in range(numOfRowsToSample):
-        currIndex = randint(0, numOfRows - 1)
-        nearestHit = findNearestHitMiss(X, Y, currIndex, 'h')
-        nearestMiss = findNearestHitMiss(X, Y, currIndex, 'm')
-        nearestHit_values = X.loc[[nearestHit]].select_dtypes(include=[np.number]).values
-        nearestMiss_values = X.loc[[nearestMiss]].select_dtypes(include=[np.number]).values
-        curr_values = X.iloc[[currIndex]].select_dtypes(include=[np.number]).values
-        resW += (curr_values - nearestMiss_values)**2 - (curr_values - nearestHit_values)**2
-
-    # print(resW)
-    resWMap = list(zip(X.select_dtypes(include=[np.number]).columns,*resW))
-    # print(resWMap)
-    return sorted(resWMap,key=itemgetter(1),reverse=True)
-
-
-
-
-def embbdedDecisionTree(X:pd.DataFrame,Y:pd.DataFrame,numOfSplits=4,numOfFeaturesToSelect=10):
+def embeddedDecisionTree(X:pd.DataFrame,Y:pd.DataFrame,numOfSplits=4,numOfFeaturesToSelect=10):
     totalAccuracy = 0
     numOflabels = Y['Vote'].nunique()
     totalConfusion = np.zeros((numOflabels, numOflabels))

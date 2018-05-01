@@ -64,7 +64,7 @@ def describeAndPlot(df:pd.DataFrame):
 
 
 ### Creates HIST plots for numerical categories ###
-## TODO set scale or normalize
+
 def histForFloat(df:pd.DataFrame):
     numFeat = df.keys()[df.dtypes.map(lambda x: x == np.number)]
     numFeat = numFeat.difference(colToInt)
@@ -102,25 +102,6 @@ def histForFloat(df:pd.DataFrame):
         plt.savefig(plotName, bbox_inches="tight")
         plt.close()
 
-
-# def pcaTrain(x_data:pd.DataFrame, y_data:pd.DataFrame):
-#     from sklearn.decomposition import PCA
-#     from sklearn.preprocessing import StandardScaler
-#
-#     #normalize the data
-#     x_data_norm = StandardScaler().fit_transform(x_data)
-#     print(x_data_norm.head(10))
-#     #initiate PCA
-#     pca = PCA(n_components=2) #for visualizaion
-#     pca_res = pca.fit_transform(x_data_norm)
-#
-#     pca_df = pd.DataFrame(data=pca_res,columns=['principal component 1', 'principal component 2'])
-#     print(pca_df.head(10))
-#     final_df = pd.concat([pca_df,y_data],axis=1)
-#     labels = y_data.Vote.unique()
-#     # plt.scatter()
-    
-    
     
 ### Function for TRAIN DATA that fill nan cells in object categories with mode value ###
 def fillNAByLabelMode(X:pd.DataFrame,Y:pd.DataFrame,index):
@@ -201,7 +182,7 @@ def distanceBetween2Samples(sam1,sam2):
     """
     sam1 = sam1.select_dtypes(include=[np.number]).values
     sam2 = sam2.select_dtypes(include=[np.number]).values
-    res = np.sqrt(np.nansum((sam1-sam2)**2)) ## TODO check which is better np.nansum(treats nan as 0) or np.sum(return nan)
+    res = np.sqrt(np.nansum((sam1-sam2)**2))
     return res
 
 
@@ -247,6 +228,8 @@ def findNearestHitMiss(X:pd.DataFrame,Y:pd.DataFrame,samIndex,hitMiss='h'):
             minScore = curr
             minIndex = currIndex
     return minIndex
+
+
 
 def heuristicFindNearestHitMiss(X: pd.DataFrame, Y: pd.DataFrame, samIndex, hitMiss='h'):
     """
